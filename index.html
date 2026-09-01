@@ -271,7 +271,9 @@
                         </div>
                         <div class="form-group">
                             <label>Master Global Smart Link</label>
-                            <input type="text" id="admin-master-link-input" class="form-control" value="https://app.admadia.site/sl?id=6a2050db46d3cf0d62f32aa4&pid=2" style="background: var(--card-bg);">
+                            <input type="text" id="admin-master-link-input" class="form-control" value="168c70819cc5c5d17b745d7c28b3fbd8
+
+" style="background: var(--card-bg);">
                         </div>
                         <button class="btn-submit" id="btn-save-api-settings">Save & Sync Network API Key</button>
                     </div>
@@ -515,7 +517,7 @@
                         <div class="box-container">
                             <div class="box-header">
                                 <span>Real-time Network Leads Feed</span>
-                                <span style="font-size: 11px; color: #1bc5bd;">Connected (Firebase)</span>
+                                <span style="font-size: 11px; color: #1bc5bd;">Connected ( Live )</span>
                             </div>
                             <ul id="live-leads-list" class="notification-list"></ul>
                         </div>
@@ -553,7 +555,7 @@
                                 <span style="font-size: 12px; color: #1bc5bd;">API Active</span>
                             </div>
                             <div style="margin-bottom: 12px; background: var(--bg-dark); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                                <a id="preview-global-link" href="https://app.admadia.site/sl?id=6a2050db46d3cf0d62f32aa4&pid=2" target="_blank" style="color: #3699ff; text-decoration: none; font-weight: 500; font-size: 13px;">Master Global Smart Link Rotator</a>
+                                <a id="preview-global-link" href="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u814724&sub6=s2smartLink&sub5=" target="_blank" style="color: #3699ff; text-decoration: none; font-weight: 500; font-size: 13px;">Master Global Smart Link Rotator</a>
                                 <div class="offer-actions">
                                     <button class="btn-getlink" onclick="trackAndOpenLink(document.getElementById('preview-global-link').href)">Get Link</button>
                                 </div>
@@ -750,7 +752,7 @@
                     <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <div class="form-group">
                             <label>Global Postback URL</label>
-                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.admadia.site/postback?clickid={clickid}&payout={payout}">
+                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2smartLink&sub5=s1?clickid={clickid}&payout={payout}">
                         </div>
                         <button class="btn-submit" style="width: 150px;" onclick="alert('Postback saved successfully!')">Save Postback</button>
                     </div>
@@ -952,7 +954,7 @@
         const db = getDatabase(app);
 
         let currentApiKey = "168c70819cc5c5d17b745d7c28b3fbd8";
-        let masterGlobalLink = "https://app.admadia.site/sl?id=6a2050db46d3cf0d62f32aa4&pid=2";
+        let masterGlobalLink = "https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2smartLink&sub5=s1";
         let cachedOffers = [];
         let loggedInUserEmail = "";
         let currentUserId = "AFF-892104";
