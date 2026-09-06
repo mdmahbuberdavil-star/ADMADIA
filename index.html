@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliate Network Platform - Pro  with Advertiser Portal</title>
+    <title>Affiliate Network Platform - Pro Edition with Advertiser Portal</title>
     
     <!-- Chart.js for Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -272,9 +272,7 @@
                         </div>
                         <div class="form-group">
                             <label>Master Global Smart Link</label>
-                            <input type="text" id="admin-master-link-input" class="form-control" value="168c70819cc5c5d17b745d7c28b3fbd8
-
-" style="background: var(--card-bg);">
+                            <input type="text" id="admin-master-link-input" class="form-control" value="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2" style="background: var(--card-bg);">
                         </div>
                         <button class="btn-submit" id="btn-save-api-settings">Save & Sync Network API Key</button>
                     </div>
@@ -287,6 +285,16 @@
                         <h4 style="color: var(--text-main); margin-bottom: 10px;">Network Live Controls</h4>
                         <button class="btn-submit" id="btn-admin-switch-affiliate" style="background: var(--admin-color); margin-top: 0;">View As Affiliate User</button>
                     </div>
+                </div>
+
+                <!-- 🟢 Click ID Search & Manual Lead Approval (New Section) 🟢 -->
+                <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                    <h4 style="color: var(--text-main); margin-bottom: 12px;">🔍 Manual Lead Approval by Click ID</h4>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="admin-click-id-search" class="form-control" placeholder="Enter Unique Click ID" style="flex: 1; min-width: 200px; background: var(--card-bg);">
+                        <button class="btn-submit" style="margin-top:0; width: 120px;" id="btn-admin-search-click-id">Search</button>
+                    </div>
+                    <div id="admin-click-id-result" style="margin-top: 15px; color: var(--text-main);"></div>
                 </div>
 
                 <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
@@ -611,7 +619,7 @@
                                 <span style="font-size: 12px; color: #1bc5bd;">API Active</span>
                             </div>
                             <div style="margin-bottom: 12px; background: var(--bg-dark); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                                <a id="preview-global-link" href="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u814724&sub6=s2smartLink&sub5=" target="_blank" style="color: #3699ff; text-decoration: none; font-weight: 500; font-size: 13px;">Master Global Smart Link Rotator</a>
+                                <a id="preview-global-link" href="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u814724&sub6=s2" target="_blank" style="color: #3699ff; text-decoration: none; font-weight: 500; font-size: 13px;">Master Global Smart Link Rotator</a>
                                 <div class="offer-actions">
                                     <button class="btn-getlink" onclick="trackAndOpenLink(document.getElementById('preview-global-link').href)">Get Link</button>
                                 </div>
@@ -857,7 +865,7 @@
                     <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <div class="form-group">
                             <label>Global Postback URL</label>
-                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2smartLink&sub5=s1?clickid={clickid}&payout={payout}">
+                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2?clickid={clickid}&payout={payout}">
                         </div>
                         <button class="btn-submit" style="width: 150px;" onclick="alert('Postback saved successfully!')">Save Postback</button>
                     </div>
@@ -1059,34 +1067,124 @@
         const db = getDatabase(app);
 
         let currentApiKey = "168c70819cc5c5d17b745d7c28b3fbd8";
-        let masterGlobalLink = "https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2smartLink&sub5=s1";
+        let masterGlobalLink = "https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2";
         let cachedOffers = [];
         let loggedInUserEmail = "";
         let currentUserId = "AFF-892104";
 
-        window.triggerLeadNotification = function(message, amount) {
-            try {
-                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
-                audio.play().catch(e => console.log(e));
-            } catch(err) {}
+        // 🟢 Unique Click ID Generator (10-20 characters)
+        function generateUniqueClickId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const length = Math.floor(Math.random() * 11) + 10;
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
 
-            const listEl = document.getElementById('live-leads-list');
-            if(listEl) {
-                const li = document.createElement('li');
-                li.style.borderLeft = "4px solid #1bc5bd";
-                li.style.background = "rgba(27, 197, 189, 0.05)";
-                li.innerHTML = `
-                    <div style="flex-grow:1; padding-left: 5px;">
-                        <strong style="color: var(--text-main);">${message}</strong>
-                        <br><span style="font-size: 11px; color: var(--text-muted);">Real-time Network Lead Verified</span>
-                    </div>
-                    <strong style="color: #1bc5bd;">+$${amount}</strong>
-                `;
-                listEl.prepend(li);
+        // 🟢 Check if IP is new for this affiliate within last 24h
+        async function isNewIP(affiliateKey, ip) {
+            const trackingsRef = ref(db, `trackings/${affiliateKey}`);
+            const now = Date.now();
+            const oneDayAgo = now - 24 * 60 * 60 * 1000;
+            try {
+                const snap = await get(trackingsRef);
+                if (snap.exists()) {
+                    let isNew = true;
+                    snap.forEach((child) => {
+                        const data = child.val();
+                        if (data.ip === ip && data.timestamp >= oneDayAgo) {
+                            isNew = false;
+                            return true; // break loop
+                        }
+                    });
+                    return isNew;
+                }
+                return true; // no previous clicks
+            } catch (error) {
+                console.error('IP check failed:', error);
+                return true; // allow if error
+            }
+        }
+
+        // 🟢 Process tracking link: truncate after sub6=s2 and append unique click ID
+        function buildTrackingLink(baseUrl, affiliateKey, offerId = null) {
+            const marker = 'sub6=s2';
+            const idx = baseUrl.indexOf(marker);
+            if (idx === -1) {
+                console.error('Tracking URL does not contain sub6=s2');
+                return baseUrl;
+            }
+            const truncated = baseUrl.substring(0, idx + marker.length);
+            const clickId = generateUniqueClickId();
+            // Store click data (will be completed in trackAndOpenLink)
+            return { url: truncated + '&clickid=' + clickId, clickId: clickId };
+        }
+
+        // 🟢 Global tracking function: copies link, registers click if new IP
+        window.trackAndOpenLink = async function(linkUrl, offerId = null) {
+            if (!loggedInUserEmail) {
+                alert('Please login as affiliate to track links.');
+                return;
+            }
+            const safeEmail = loggedInUserEmail.replace(/[\.#\$\/\[\]]/g, '_');
+            const baseUrl = linkUrl.split('&clickid=')[0]; // in case already has clickid
+            const { url: finalUrl, clickId } = buildTrackingLink(baseUrl, safeEmail);
+
+            // Copy final URL to clipboard
+            try {
+                await navigator.clipboard.writeText(finalUrl);
+            } catch (err) {
+                console.error('Clipboard write failed:', err);
+            }
+
+            // Fetch IP
+            let clientIp = 'unknown';
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                clientIp = data.ip;
+            } catch(e) { console.log('IP fetch failed'); }
+
+            // Check if new IP
+            const allowClick = await isNewIP(safeEmail, clientIp);
+            if (allowClick) {
+                // Record click in Firebase
+                const clickRef = ref(db, `trackings/${safeEmail}/${clickId}`);
+                await set(clickRef, {
+                    timestamp: Date.now(),
+                    ip: clientIp,
+                    deviceFp: hashString(navigator.userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height),
+                    campaignId: offerId || 'global',
+                    conversion: false,
+                    earnings: 0,
+                    clickId: clickId,
+                    affiliate: safeEmail
+                });
+                // Update affiliate stats (clicks count)
+                const userStatsRef = ref(db, `users/${safeEmail}/stats`);
+                const statsSnap = await get(userStatsRef);
+                let currentClicks = statsSnap.exists() ? (statsSnap.val().clicks || 0) : 0;
+                await update(userStatsRef, { clicks: currentClicks + 1 });
+                playClickSound();
+                alert('Link copied and click registered (new IP)!');
+            } else {
+                alert('Link copied. Click not registered (duplicate IP).');
             }
         };
 
-        // Audio notification functions
+        function hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash |= 0;
+            }
+            return hash.toString();
+        }
+
+        // 🟢 Sound functions
         function playClickSound() {
             try {
                 const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdYivh5eMf2p5e32QmYuPmI2IiX97fXp5eXl4eXd3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAA');
@@ -1099,50 +1197,6 @@
                 const audio = new Audio('data:audio/wav;base64,UklGRkZGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQYGAACBhYqFbF1fdYivh5eMf2p5e32QmYuPmI2IiX97fXp5eXl4eXd3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAA');
                 audio.play().catch(e => console.log('Conversion sound error:', e));
             } catch(e) {}
-        }
-
-        window.trackAndOpenLink = async function(linkUrl, campaignId = null) {
-            navigator.clipboard.writeText(linkUrl);
-            const clickId = 'clk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            let clientIp = 'unknown';
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                clientIp = data.ip;
-            } catch(e) { console.log('IP fetch failed'); }
-            const userAgent = navigator.userAgent;
-            const deviceFp = hashString(userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height);
-            
-            if (loggedInUserEmail) {
-                const safeEmail = loggedInUserEmail.replace(/[\.#\$\/\[\]]/g, '_');
-                const trackingRef = ref(db, `trackings/${safeEmail}/${clickId}`);
-                const campaignKey = campaignId || 'global';
-                // For dedup demonstration, we rely on clickId uniqueness, but we can also check existing trackings for same IP+device+campaign in the last 24h.
-                await set(trackingRef, {
-                    timestamp: Date.now(),
-                    ip: clientIp,
-                    deviceFp: deviceFp,
-                    campaignId: campaignKey,
-                    conversion: false,
-                    earnings: 0
-                });
-                const userStatsRef = ref(db, `users/${safeEmail}/stats`);
-                const statsSnap = await get(userStatsRef);
-                let currentClicks = statsSnap.exists() ? (statsSnap.val().clicks || 0) : 0;
-                await update(userStatsRef, { clicks: currentClicks + 1 });
-                playClickSound();
-            }
-            alert('Link copied and click recorded!');
-        };
-
-        function hashString(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash |= 0;
-            }
-            return hash.toString();
         }
 
         // 🟢 REAL-TIME FIREBASE SYNC FOR STATS & AUTOMATIC BITCOIN INVOICES 🟢
@@ -1305,7 +1359,8 @@
             }
             const clickId = 'cmp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             const campaignRef = ref(db, `campaigns/${safeEmail}/${clickId}`);
-            const trackingLink = `${masterGlobalLink}&campaign_id=${clickId}`;
+            // Store only the base tracking link (without clickid)
+            const trackingLink = masterGlobalLink; // truncated base
             await set(campaignRef, {
                 name: name,
                 clickId: clickId,
@@ -1332,8 +1387,8 @@
                         <div style="border-bottom: 1px solid var(--border-color); padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <strong style="color: var(--text-main);">${camp.name}</strong>
-                                <br><span style="font-size: 12px; color: var(--text-muted);">Tracking Link: ${camp.trackingLink}</span>
-                                <br><span style="font-size: 12px; color: var(--text-muted);">Click ID: <code>${camp.clickId}</code></span>
+                                <br><span style="font-size: 12px; color: var(--text-muted);">Tracking Link (Base): ${camp.trackingLink}</span>
+                                <br><span style="font-size: 12px; color: var(--text-muted);">Campaign ID: <code>${camp.clickId}</code></span>
                             </div>
                             <button class="btn-getlink" onclick="trackAndOpenLink('${camp.trackingLink}', '${camp.clickId}')">Get Link</button>
                         </div>
@@ -1473,6 +1528,77 @@
                 computeAndRender(startTs, endTs);
             });
         }
+
+        // 🟢 Admin Click ID Search & Manual Lead Approval
+        document.getElementById('btn-admin-search-click-id').addEventListener('click', async () => {
+            const clickId = document.getElementById('admin-click-id-search').value.trim();
+            if (!clickId) {
+                document.getElementById('admin-click-id-result').innerHTML = '<span style="color:#f64e60;">Please enter a Click ID.</span>';
+                return;
+            }
+            const resultDiv = document.getElementById('admin-click-id-result');
+            resultDiv.innerHTML = 'Searching...';
+            try {
+                const trackingsRef = ref(db, 'trackings');
+                const snapshot = await get(trackingsRef);
+                let found = null;
+                let foundAffiliate = null;
+                if (snapshot.exists()) {
+                    snapshot.forEach((affiliateSnap) => {
+                        const affiliateKey = affiliateSnap.key;
+                        const affiliateTrackings = affiliateSnap.val();
+                        if (affiliateTrackings[clickId]) {
+                            found = affiliateTrackings[clickId];
+                            foundAffiliate = affiliateKey;
+                            return true; // break
+                        }
+                    });
+                }
+                if (!found) {
+                    resultDiv.innerHTML = '<span style="color:#f64e60;">Click ID not found.</span>';
+                    return;
+                }
+                const status = found.conversion ? 'Converted' : 'Pending';
+                resultDiv.innerHTML = `
+                    <div style="background: var(--card-bg); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <strong>Click Details</strong><br>
+                        Click ID: <code>${clickId}</code><br>
+                        Affiliate: ${foundAffiliate.replace(/_/g, '.')}<br>
+                        IP: ${found.ip || 'N/A'}<br>
+                        Timestamp: ${new Date(found.timestamp).toLocaleString()}<br>
+                        Status: ${status}<br>
+                        ${!found.conversion ? `<button class="btn-submit" style="margin-top:10px; width:auto; padding: 8px 20px;" onclick="approveLeadByClickId('${clickId}', '${foundAffiliate}')">Approve Lead (+$25)</button>` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color:#f64e60;">Error: ${error.message}</span>`;
+            }
+        });
+
+        window.approveLeadByClickId = async function(clickId, affiliateKey) {
+            const clickRef = ref(db, `trackings/${affiliateKey}/${clickId}`);
+            await update(clickRef, { conversion: true, earnings: 25.00 });
+            // Credit affiliate balance
+            const statsRef = ref(db, `users/${affiliateKey}/stats`);
+            const snap = await get(statsRef);
+            const currentEarnings = snap.exists() ? (snap.val().earnings || 0) : 0;
+            const currentLeads = snap.exists() ? (snap.val().leads || 0) : 0;
+            await update(statsRef, { earnings: currentEarnings + 25, leads: currentLeads + 1 });
+            // Add lead entry to leads node
+            const leadRef = ref(db, `leads/${Date.now()}`);
+            await set(leadRef, {
+                clickId: clickId,
+                affiliate: affiliateKey,
+                earnings: 25.00,
+                timestamp: Date.now()
+            });
+            // Trigger notification
+            triggerLeadNotification(`Manual Lead Approval (${clickId})`, 25.00);
+            playConversionSound();
+            alert('Lead approved and balance credited.');
+            // Refresh search result
+            document.getElementById('btn-admin-search-click-id').click();
+        };
 
         // Dark/Light Theme Toggle
         document.getElementById('theme-toggle-btn').addEventListener('click', () => {
@@ -1763,10 +1889,37 @@
             { code: 'ES', flag: '🇪🇸' }
         ];
 
-        // 🟢 REAL-TIME FIREBASE LEADS STREAM 🟢
+        // 🟢 REAL-TIME FIREBASE LEADS STREAM (combines simulated + real)
         function startLiveRealtimeEngine() {
             const listEl = document.getElementById('live-leads-list');
-            function pushNewLead() {
+            
+            // Real leads from Firebase
+            const leadsRef = ref(db, 'leads');
+            onValue(leadsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    // Clear existing simulated items? We'll prepend real leads
+                    // Actually we will add real leads as they come, but keep demo for initial.
+                    snapshot.forEach((child) => {
+                        const lead = child.val();
+                        const li = document.createElement('li');
+                        li.style.borderLeft = "4px solid #1bc5bd";
+                        li.style.background = "rgba(27, 197, 189, 0.05)";
+                        li.innerHTML = `
+                            <img src="https://i.pravatar.cc/100?img=${Math.floor(Math.random()*70)+1}" class="user-avatar" alt="user">
+                            <div style="flex-grow:1;">
+                                <strong style="color: var(--text-main);">Manual Lead Approval (Click ID: ${lead.clickId})</strong>
+                                <br><span style="font-size: 11px; color: var(--text-muted);">Affiliate: ${lead.affiliate}</span>
+                            </div>
+                            <strong style="color: #1bc5bd;">+$${lead.earnings.toFixed(2)}</strong>
+                        `;
+                        listEl.prepend(li);
+                        if (listEl.children.length > 10) listEl.removeChild(listEl.lastChild);
+                    });
+                }
+            });
+
+            // Simulated demo leads for visual continuity
+            function pushDemoLead() {
                 const randomId = Math.floor(Math.random() * 50000) + 1;
                 const geo = targetGeos[Math.floor(Math.random() * targetGeos.length)];
                 const payout = (Math.random() * (10 - 0.5) + 0.5).toFixed(2);
@@ -1784,7 +1937,7 @@
                 listEl.prepend(li);
                 if (listEl.children.length > 8) { listEl.removeChild(listEl.lastChild); }
             }
-            setInterval(pushNewLead, 5000);
+            setInterval(pushDemoLead, 8000);
         }
 
         // 🟢 500+ ACTIVE AFFILIATES SCROLLABLE LIST 🟢
@@ -1839,7 +1992,7 @@
                         epc: '$' + dynamicEpc,
                         statusText: isBoost ? '🔥 Boost' : '🟢 Active',
                         statusClass: isBoost ? 'status-boost' : 'status-running',
-                        url: `${masterGlobalLink}&offer_id=${10000+(cachedOffers.length+1)}`
+                        url: masterGlobalLink // base truncated URL, no offer_id to keep sub6=s2
                     });
                 }
             });
@@ -1865,7 +2018,7 @@
                         <br><span class="payout-badge">${off.payout}</span>
                     </div>
                     <div class="offer-actions">
-                        <button class="btn-getlink" onclick="trackAndOpenLink('${off.url}')">Get Link</button>
+                        <button class="btn-getlink" onclick="trackAndOpenLink('${off.url}', '${off.id}')">Get Link</button>
                     </div>
                 </div>`;
             }
@@ -1891,7 +2044,7 @@
                             <span class="payout-badge">${offer.payout}</span>
                             <span class="${offer.statusClass}">${offer.statusText}</span>
                         </div>
-                        <button class="btn-getlink" onclick="trackAndOpenLink('${offer.url}')">Get Link / Copy</button>
+                        <button class="btn-getlink" onclick="trackAndOpenLink('${offer.url}', '${offer.id}')">Get Link / Copy</button>
                     </div>
                 </div>`;
             });
@@ -2002,6 +2155,12 @@
         document.getElementById('btn-save-api-settings').addEventListener('click', () => {
             currentApiKey = document.getElementById('admin-api-key-input').value.trim();
             masterGlobalLink = document.getElementById('admin-master-link-input').value.trim();
+            // Ensure the master link ends at sub6=s2
+            const marker = 'sub6=s2';
+            const idx = masterGlobalLink.indexOf(marker);
+            if (idx !== -1) {
+                masterGlobalLink = masterGlobalLink.substring(0, idx + marker.length);
+            }
             document.getElementById('preview-global-link').href = masterGlobalLink;
             generateOffersData();
             alert("API Key and Master Settings updated successfully!");
@@ -2116,6 +2275,49 @@
                 }
             });
         }
+
+        // Global function for lead notification (used by manual updates and approvals)
+        window.triggerLeadNotification = function(message, amount) {
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRkZGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQYGAACBhYqFbF1fdYivh5eMf2p5e32QmYuPmI2IiX97fXp5eXl4eXd3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAA');
+                audio.play().catch(e => console.log(e));
+            } catch(err) {}
+
+            const listEl = document.getElementById('live-leads-list');
+            if(listEl) {
+                const li = document.createElement('li');
+                li.style.borderLeft = "4px solid #1bc5bd";
+                li.style.background = "rgba(27, 197, 189, 0.05)";
+                li.innerHTML = `
+                    <div style="flex-grow:1; padding-left: 5px;">
+                        <strong style="color: var(--text-main);">${message}</strong>
+                        <br><span style="font-size: 11px; color: var(--text-muted);">Real-time Network Lead Verified</span>
+                    </div>
+                    <strong style="color: #1bc5bd;">+$${amount}</strong>
+                `;
+                listEl.prepend(li);
+            }
+        };
+    </script>
+
+    <!-- Requested Firebase Integration Script (exactly before closing body) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyC3BWv3vXPezOg-LTMsZgoqOXAJH5UsvyY",
+        authDomain: "adbluemedia-156b6.firebaseapp.com",
+        databaseURL: "https://adbluemedia-156b6-default-rtdb.firebaseio.com",
+        projectId: "adbluemedia-156b6",
+        storageBucket: "adbluemedia-156b6.firebasestorage.app",
+        messagingSenderId: "898064142957",
+        appId: "1:898064142957:web:c077026297cd307e862564",
+        measurementId: "G-GE7P1D17LZ"
+      };
+      
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
