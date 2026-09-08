@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliate Network Platform - Pro Edition with Advertiser Portal</title>
+    <title>Affiliate Network Platform - Pro admadia.site with publishers Portal</title>
     
     <!-- Chart.js for Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -73,7 +73,7 @@
         .main-wrapper { margin-left: 250px; padding: 20px; width: calc(100% - 250px); margin-top: 75px; }
         
         /* 🟢 Sticky Top Header 🟢 */
-        .sticky-top-header { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 10px 20px; position: fixed; top: 0; left: 250px; width: calc(100% - 250px); z-index: 99; box-shadow: 0 2px 5px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px; transition: 0.3s; }
+        .sticky-top-header { display: flex; align-items: center; justify-content: flex-start: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 10px 20px; position: fixed; top: 0; left: 250px; width: calc(100% - 250px); z-index: 99; box-shadow: 0 2px5px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px; transition: 0.3s; }
         .header-metrics-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         
         .timer-box { display: flex; flex-direction: column; justify-content: center; padding-right: 15px; border-right: 1px solid var(--border-color); }
@@ -230,12 +230,16 @@
             <div class="form-group">
                 <label>Email Address</label>
                 <input type="email" id="signup-email" class="form-control" placeholder="user@domain.com">
-            </div>
+            </div> 
+            <div class="form-group mb-3">
+    <label for="promo_code">promo_code)</label>
+    <input type="text" class="form-control" id="promo_code" name="promo_code" placeholder="promo_code">
+           </div>
             <div class="form-group">
                 <label>Password</label>
                 <input type="password" id="signup-password" class="form-control" placeholder="••••••••">
             </div>
-            <button id="btn-signup" class="btn-submit">Register (Pending Admin Approval)</button>
+            <button id="btn-signup" class="btn-submit">Register (AUTO ACTIVE Approval)</button>
             <div class="toggle-auth">
                 Already have an account? <span id="show-login">Sign In here</span>
             </div>
@@ -487,7 +491,7 @@
                     <div class="stat-info">
                         <span class="stat-label">Month</span>
                         <span class="stat-val-main" id="stat-month-earn">$0.00</span>
-                        <span class="stat-val-sub" id="target-month-sub">$60.65</span>
+                        <span class="stat-val-sub" id="target-month-sub">$00.00</span>
                     </div>
                 </div>
 
@@ -498,7 +502,7 @@
                     <div class="stat-info">
                         <span class="stat-label">Week</span>
                         <span class="stat-val-main" id="stat-week-earn">$0.00</span>
-                        <span class="stat-val-sub" id="target-week-sub">$3.99</span>
+                        <span class="stat-val-sub" id="target-week-sub">$0.00</span>
                     </div>
                 </div>
 
@@ -509,7 +513,7 @@
                     <div class="stat-info">
                         <span class="stat-label">Day</span>
                         <span class="stat-val-main" id="stat-day-earn">$0.00</span>
-                        <span class="stat-val-sub" id="target-day-sub">$0.48</span>
+                        <span class="stat-val-sub" id="target-day-sub">$0.00</span>
                     </div>
                 </div>
 
@@ -558,7 +562,7 @@
 
                         <!-- NETWORK CHAT -->
                         <div class="box-container">
-                            <div class="box-header">Network Chat</div>
+                            <div class="box-header">AdMadia Chat</div>
                             <div class="chat-area" id="chatContainer">
                                 <div class="chat-msg"><b>Admin:</b> Welcome to AdMadia Network. Bitcoin payouts are processed automatically every Tuesday. <span class="chat-time">Just Now</span></div>
                             </div>
@@ -571,16 +575,16 @@
                         <!-- 🟢 ACTIVE AFFILIATES (500+ Scrollable List) 🟢 -->
                         <div class="box-container" style="margin-bottom: 20px;">
                             <div class="box-header">
-                                <span>Active Affiliates Online (500 Live)</span>
+                                <span>Active Affiliates ( Live)</span>
                                 <span style="font-size: 11px; background: rgba(137,80,252,0.1); color: #8950fc; padding: 3px 6px; border-radius: 4px;">Verified Feed</span>
                             </div>
                             <ul id="active-affiliates-list" class="active-affiliates-list"></ul>
                         </div>
 
-                        <!-- Live Real-time Network Leads -->
+                        <!-- Network Leads -->
                         <div class="box-container">
                             <div class="box-header">
-                                <span>Real-time Network Leads Feed</span>
+                                <span> Network Leads Feed</span>
                                 <span style="font-size: 11px; color: #1bc5bd;">Connected ( Live )</span>
                             </div>
                             <ul id="live-leads-list" class="notification-list"></ul>
@@ -615,11 +619,11 @@
 
                         <div class="box-container" style="margin-bottom: 20px;">
                             <div class="box-header">
-                                <span>Top Offers Feed</span>
-                                <span style="font-size: 12px; color: #1bc5bd;">API Active</span>
+                                <span>ACTIVE Offers Feed</span>
+                                <span style="font-size: 12px; color: #1bc5bd;"> NEW ADD </span>
                             </div>
                             <div style="margin-bottom: 12px; background: var(--bg-dark); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                                <a id="preview-global-link" href="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u814724&sub6=s2" target="_blank" style="color: #3699ff; text-decoration: none; font-weight: 500; font-size: 13px;">Master Global Smart Link Rotator</a>
+                                <a id="preview-global-link" href="https://app.trcefy.com/click?pid=2&offer_id=19055&sub2=u298346&s1" target="_blank" style="color: #3699ff; text-decoration: none; font-weight: 500; font-size: 13px;"> Global Smart  </a>
                                 <div class="offer-actions">
                                     <button class="btn-getlink" onclick="trackAndOpenLink(document.getElementById('preview-global-link').href)">Get Link</button>
                                 </div>
@@ -766,7 +770,7 @@
                             <input type="date" id="report-date-end" class="form-control" style="background: var(--card-bg);">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Click ID</label>
+                            <label>Sub ID</label>
                             <input type="text" id="report-click-id" class="form-control" placeholder="Search by Click ID" style="background: var(--card-bg); width: 200px;">
                         </div>
                         <button class="btn-submit" id="btn-apply-report-filter" style="margin-top:0; width: 120px;">Apply Filter</button>
@@ -824,7 +828,7 @@
                             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                                <thead>
                                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                                       <th style="padding: 8px;">Referred User Email</th>
+                                       <th style="padding: 8px;"><th style="padding: 8px;">Promo Code</th>
                                        <th style="padding: 8px;">Join Date</th>
                                        <th style="padding: 8px;">Commission Generated</th>
                                    </tr>
@@ -865,7 +869,7 @@
                     <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <div class="form-group">
                             <label>Global Postback URL</label>
-                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2?clickid={clickid}&payout={payout}">
+                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/click?pid=2&offer_id=19055&sub2=u298346&{s1}{clickid}&{clickid}={s1}">
                         </div>
                         <button class="btn-submit" style="width: 150px;" onclick="alert('Postback saved successfully!')">Save Postback</button>
                     </div>
@@ -1067,10 +1071,10 @@
         const db = getDatabase(app);
 
         let currentApiKey = "168c70819cc5c5d17b745d7c28b3fbd8";
-        let masterGlobalLink = "https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s2";
+        let masterGlobalLink = "https://app.trcefy.com/sl?id=6a2050db46d3cf0d62f32aa4&pid=2&sub2=u298346&sub6=s1";
         let cachedOffers = [];
         let loggedInUserEmail = "";
-        let currentUserId = "AFF-892104";
+        let currentUserId = "AFF-1";
 
         // 🟢 Unique Click ID Generator (10-20 characters)
         function generateUniqueClickId() {
@@ -1087,7 +1091,7 @@
         async function isNewIP(affiliateKey, ip) {
             const trackingsRef = ref(db, `trackings/${affiliateKey}`);
             const now = Date.now();
-            const oneDayAgo = now - 24 * 60 * 60 * 1000;
+            const oneDayAgo = now - = now - 2 * 1000;
             try {
                 const snap = await get(trackingsRef);
                 if (snap.exists()) {
@@ -1108,18 +1112,18 @@
             }
         }
 
-        // 🟢 Process tracking link: truncate after sub6=s2 and append unique click ID
+        // 🟢 Process tracking link: truncate after sub6=s1 and append unique click ID
         function buildTrackingLink(baseUrl, affiliateKey, offerId = null) {
-            const marker = 'sub6=s2';
+            const marker = 'sub6=s1';
             const idx = baseUrl.indexOf(marker);
-            if (idx === -1) {
-                console.error('Tracking URL does not contain sub6=s2');
+            if (idx === -s1) {
+                console.error('Tracking URL does not contain sub6=s1');
                 return baseUrl;
             }
             const truncated = baseUrl.substring(0, idx + marker.length);
             const clickId = generateUniqueClickId();
             // Store click data (will be completed in trackAndOpenLink)
-            return { url: truncated + '&clickid=' + clickId, clickId: clickId };
+            return { url: truncated + 'clickid=' + clickId, clickId: clickId };
         }
 
         // 🟢 Global tracking function: copies link, registers click if new IP
@@ -1129,7 +1133,7 @@
                 return;
             }
             const safeEmail = loggedInUserEmail.replace(/[\.#\$\/\[\]]/g, '_');
-            const baseUrl = linkUrl.split('&clickid=')[0]; // in case already has clickid
+            const baseUrl = linkUrl.split('clickid=')[0]; // in case already has clickid
             const { url: finalUrl, clickId } = buildTrackingLink(baseUrl, safeEmail);
 
             // Copy final URL to clipboard
@@ -2318,6 +2322,32 @@
       
       const app = initializeApp(firebaseConfig);
       const analytics = getAnalytics(app);
+     <script type="text/javascript">
+	setInterval(checkLeads, 15000); //Check for leads every 15 seconds
+	function checkLeads() {
+		
+		//Don't forget, jquery is required for $.getJSON
+
+		$.getJSON("https://d3r33tlb373kwk.cloudfront.net/public/external/check2.php?testing=0&callback=?", //Hint: change to testing=1 for test leads
+			function (leads) {
+				var completed_leads = leads.length;
+				if (completed_leads) {
+					var offer_ids = [];
+					var earnings_in_cents = 0;
+					$.each(leads, function (key, lead) {
+						offer_ids.push(parseInt(lead.offer_id));
+						earnings_in_cents += parseFloat(lead.points);
+						console.log("Single lead on offer id " + lead.offer_id + " for  $" + (parseFloat(lead.points) / 100).toFixed(2));
+					});
+					console.log("SUMMARY: User has completed " + completed_leads + " leads, for $" + (earnings_in_cents / 100) + " earnings, on offer ids: " + offer_ids.join(","));
+				}
+				else {
+					console.log("No leads were found");
+				}
+			});
+	}
+</script>
+        
     </script>
 </body>
 </html>
