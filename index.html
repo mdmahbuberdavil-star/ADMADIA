@@ -1087,7 +1087,7 @@
         async function isNewIP(affiliateKey, ip) {
             const trackingsRef = ref(db, `trackings/${affiliateKey}`);
             const now = Date.now();
-            const oneDayAgo = now - 1 * 60 * 1000* 1000;
+            const oneDayAgo = now - 24 * 60 * 1000* 1000;
             try {
                 const snap = await get(trackingsRef);
                 if (snap.exists()) {
