@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliate Network Platform - Pro Edition with Advertiser Portal</title>
+    <title>ADMADIA Pro: Advanced Integrated Affiliate Network Management Platform | Comprehensive Advertiser Portal & Performance Analytics Dashboard</title>
     
     <!-- Chart.js for Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1087,7 +1087,7 @@
         async function isNewIP(affiliateKey, ip) {
             const trackingsRef = ref(db, `trackings/${affiliateKey}`);
             const now = Date.now();
-            const oneDayAgo = now - 24 * 60 * 60 * 1000;
+            const oneDayAgo = now - 1 * 60 * 1000;
             try {
                 const snap = await get(trackingsRef);
                 if (snap.exists()) {
