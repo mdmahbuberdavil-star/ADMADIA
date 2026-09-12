@@ -205,6 +205,11 @@
         .toast { position: fixed; bottom: 20px; right: 20px; background: #1e1e2d; color: #fff; padding: 14px 20px; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 9999; font-size: 14px; border-left: 4px solid #3699ff; max-width: 340px; }
         .toast.success { border-left-color: #1bc5bd; }
         .toast.error { border-left-color: #f64e60; }
+
+        /* ==== NEW: Click tracking badge ==== */
+        .ct-badge { display:inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 6px; }
+        .ct-badge.ok { background: rgba(27,197,189,0.1); color: #1bc5bd; border: 1px solid rgba(27,197,189,0.3); }
+        .ct-badge.warn { background: rgba(255,168,0,0.1); color: #ffa800; border: 1px solid rgba(255,168,0,0.3); }
     </style>
 </head>
 <body>
@@ -401,6 +406,7 @@
                 <li class="admin-menu-item" id="admin-menu-users">👥 Affiliate Users Management</li>
                 <li class="admin-menu-item" id="admin-menu-advertiser-approvals">💳 Advertiser Payment Approvals</li>
                 <li class="admin-menu-item" id="admin-menu-live-earnings">📊 Live Earnings Tracker</li>
+                <li class="admin-menu-item" id="admin-menu-click-tracking">📡 Click ID Tracking Log</li>
                 <li class="admin-menu-item" id="admin-menu-traffic-quality">🛡️ Traffic & IP Quality</li>
                 <li class="admin-menu-item" id="admin-menu-managers">🧑‍💼 Manager Accounts</li>
                 <li id="btn-admin-logout" style="color: #f64e60; margin-top: 20px;">🚪 Logout</li>
@@ -533,11 +539,11 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>User ID</th><th>Name</th><th>Email</th><th>FF ID</th><th>Status</th><th>Rank Assign</th><th>Actions</th>
+                                <th>User ID</th><th>Name</th><th>Email</th><th>FF ID</th><th>Main Click ID</th><th>Status</th><th>Rank Assign</th><th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="admin-users-table-body">
-                            <tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 15px;">Loading users list...</td></tr>
+                            <tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 15px;">Loading users list...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -595,6 +601,38 @@
                         </thead>
                         <tbody id="admin-live-earnings-table-body">
                             <tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 15px;">Loading live data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ==== NEW: Admin Click ID Tracking Log ==== -->
+            <div id="admin-view-click-tracking" class="box-container hidden">
+                <div class="box-header">
+                    <span>📡 Affiliate Click Tracking — Affiliate ID & Click ID Breakdown</span>
+                    <input type="text" id="admin-ct-search" class="form-control" placeholder="Search by affiliate email..." style="width: 260px; background: var(--bg-dark);">
+                </div>
+                <div class="metrics-grid-2x2" style="margin-bottom: 20px;">
+                    <div class="metric-box box-clicks"><h2 id="ct-total-clicks">0</h2><h4>Total Clicks (All Affiliates)</h4><div class="trend-indicator">Live</div></div>
+                    <div class="metric-box box-leads"><h2 id="ct-total-affiliates">0</h2><h4>Active Affiliates</h4><div class="trend-indicator">Live</div></div>
+                    <div class="metric-box box-earn"><h2 id="ct-total-clickids">0</h2><h4>Distinct Click IDs</h4><div class="trend-indicator">Live</div></div>
+                    <div class="metric-box box-epc"><h2 id="ct-last-click">—</h2><h4>Last Click (Any)</h4><div class="trend-indicator">Live</div></div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Affiliate</th>
+                                <th>Total Clicks</th>
+                                <th>Last Click Time</th>
+                                <th>Click ID(s)</th>
+                                <th>Per-Click-ID Count</th>
+                                <th>Last Click At (Per ID)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-ct-table-body">
+                            <tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding:15px;">Loading click tracking...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -818,6 +856,28 @@
                             <div class="metric-box box-leads"><h2 id="metric-leads">0</h2><h4>Leads</h4><div class="trend-indicator" id="trend-leads">0% ▲</div></div>
                             <div class="metric-box box-earn"><h2 id="metric-earnings">$0.00</h2><h4>Earnings</h4><div class="trend-indicator" id="trend-earnings">0% ▲</div></div>
                             <div class="metric-box box-epc"><h2 id="metric-epc">$0.00</h2><h4>EPC</h4><div class="trend-indicator" id="trend-epc">0% ▲</div></div>
+                        </div>
+
+                        <!-- ==== NEW: Affiliate-visible Click Tracking widget ==== -->
+                        <div class="box-container" style="margin-bottom: 20px;">
+                            <div class="box-header">
+                                <span>📡 My Click Tracking (Affiliate + Click ID)</span>
+                                <span style="font-size: 12px; color:#1bc5bd;">Live</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 11px; color: var(--text-muted);">Total Clicks (Affiliate ID)</span>
+                                    <h3 id="aff-ct-total" style="color:#3699ff; margin-top: 4px;">0</h3>
+                                </div>
+                                <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 11px; color: var(--text-muted);">Last Click At</span>
+                                    <h3 id="aff-ct-last" style="color:#ffa800; font-size: 15px; margin-top: 4px;">—</h3>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-dark); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted);">
+                                <strong style="color: var(--text-main);">My Persistent Click ID:</strong>
+                                <code id="aff-main-click-id" style="color:#1bc5bd; margin-left: 6px;">—</code>
+                            </div>
                         </div>
 
                         <div class="box-container" style="margin-bottom: 20px;">
@@ -1095,6 +1155,10 @@
                                 <input type="text" id="profile-input-id" class="form-control" style="background: var(--card-bg);" readonly>
                             </div>
                             <div class="form-group">
+                                <label>My Persistent Click ID (Main Tracking ID)</label>
+                                <input type="text" id="profile-input-clickid" class="form-control" style="background: var(--card-bg);" readonly>
+                            </div>
+                            <div class="form-group">
                                 <label>Bitcoin Wallet Address (For Tuesday Payouts)</label>
                                 <input type="text" id="profile-input-btc" class="form-control" style="background: var(--card-bg);" placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh">
                             </div>
@@ -1312,10 +1376,10 @@
         };
 
         // ---------- Session persistence (3-day cookie-like via localStorage) ----------
-        function saveSession(email, role, ffid) {
+        function saveSession(email, role, ffid, mainClickId) {
             const expires = Date.now() + (SESSION_DAYS * 24 * 60 * 60 * 1000);
             try {
-                localStorage.setItem(SESSION_KEY, JSON.stringify({ email, role, ffid, expires }));
+                localStorage.setItem(SESSION_KEY, JSON.stringify({ email, role, ffid, mainClickId: mainClickId||null, expires }));
             } catch(e) { console.warn('localStorage unavailable', e); }
         }
         function loadSession() {
@@ -1359,6 +1423,7 @@
         let cachedOffers = [];
         let loggedInUserEmail = "";
         let loggedInUserFFId = "";
+        let loggedInUserMainClickId = "";
         let currentRole = ""; // 'admin', 'manager', 'affiliate', 'advertiser'
         const ADMIN_EMAIL = 'nirob.wapkib@use.admadia';
         const ADMIN_PASSWORD = 'Admission&&&&$#@@$@@@##!!!-8727Nirob1971@@@@Muktachobomagi@@@11110000000&&&$$$$@@@@@@@@@@@@@@@7@87@7@8@8@@@@&@&@$';
@@ -1394,22 +1459,81 @@
         }
 
         // ============================================================
-        //  TRACKING LINK BUILDER — NEW FORMAT
+        //  *** NEW: Persist Click ID (Affiliate Level) ***
+        // ============================================================
+        async function ensureMainClickId(email) {
+            if (!email) return null;
+            const key = safeKey(email);
+            const pRef = ref(db, `users/${key}/profile`);
+            try {
+                const snap = await get(pRef);
+                if (!snap.exists()) {
+                    // create a minimal profile node if missing (e.g. admin viewing as affiliate)
+                    const newId = 'CID-' + generateUniqueClickId();
+                    await set(ref(db, `users/${key}/profile`), {
+                        email, mainClickId: newId, createdAt: Date.now(),
+                        status: 'Approved', rank: 'Standard Affiliate', name: email.split('@')[0]
+                    });
+                    return newId;
+                }
+                const p = snap.val();
+                if (p.mainClickId) return p.mainClickId;
+                const newId = 'CID-' + generateUniqueClickId();
+                await update(pRef, { mainClickId: newId });
+                return newId;
+            } catch(e) {
+                console.warn('ensureMainClickId error:', e);
+                return 'CID-' + generateUniqueClickId();
+            }
+        }
+
+        // ============================================================
+        //  *** NEW: Record click in clickTracking/ (Affiliate + Click ID) ***
+        // ============================================================
+        async function recordClickForTracking(affiliateKey, clickId) {
+            const now = Date.now();
+            try {
+                // 1) Affiliate-level summary
+                const summaryRef = ref(db, `clickTracking/${affiliateKey}/summary`);
+                const sSnap = await get(summaryRef);
+                const sData = sSnap.exists() ? sSnap.val() : { totalClicks: 0 };
+                await update(summaryRef, {
+                    affiliateId: affiliateKey,
+                    totalClicks: (sData.totalClicks || 0) + 1,
+                    lastClickAt: now
+                });
+
+                // 2) Per-clickId counter
+                const clickIdRef = ref(db, `clickTracking/${affiliateKey}/clickIds/${clickId}`);
+                const cSnap = await get(clickIdRef);
+                const cData = cSnap.exists() ? cSnap.val() : { count: 0 };
+                await update(clickIdRef, {
+                    affiliateId: affiliateKey,
+                    clickId: clickId,
+                    count: (cData.count || 0) + 1,
+                    lastClickAt: now
+                });
+            } catch(e) {
+                console.warn('recordClickForTracking error:', e);
+            }
+        }
+
+        // ============================================================
+        //  TRACKING LINK BUILDER — PERSISTENT clickId version
         //  Format: {base_truncated_at_s1}admedia_{clickId}_admedia_{affiliateFFId}
         // ============================================================
-        function buildTrackingLink(baseUrl, affiliateFfId) {
+        function buildTrackingLink(baseUrl, affiliateFfId, clickId) {
             const marker = 'sub5=s1';
             const idx = baseUrl.indexOf(marker);
             let base = baseUrl;
             if (idx !== -1) base = baseUrl.substring(0, idx + marker.length);
-            const clickId = generateUniqueClickId();
             const ffid = affiliateFfId || 'FF-00000';
-            // No separator, per user requirement
-            const finalUrl = base + 'admedia_' + clickId + '_admedia_' + ffid;
-            return { url: finalUrl, clickId: clickId };
+            const cid = clickId || ('CID-' + generateUniqueClickId());
+            const finalUrl = base + 'admedia_' + cid + '_admedia_' + ffid;
+            return { url: finalUrl, clickId: cid };
         }
 
-        // ---------- IP check (only invoked when link clicked) ----------
+        // ---------- IP check ----------
         async function isNewIP(affiliateKey, ip) {
             const trackingsRef = ref(db, `trackings/${affiliateKey}`);
             const now = Date.now();
@@ -1429,7 +1553,10 @@
         }
 
         // ============================================================
-        //  GLOBAL TRACK & OPEN — clicked → registers click in Firebase
+        //  GLOBAL TRACK & OPEN
+        //  - uses PERSISTENT mainClickId
+        //  - increments clickTracking/{affiliate}/{clickId}
+        //  - records lastClickAt (timestamp)
         // ============================================================
         window.trackAndOpenLink = async function(linkUrl, offerId = null) {
             if (!loggedInUserEmail) {
@@ -1437,15 +1564,25 @@
                 return;
             }
             const key = safeKey(loggedInUserEmail);
-            const baseUrl = linkUrl.split('admedia_')[0]; // strip any prior click-id if present
 
-            const { url: finalUrl, clickId } = buildTrackingLink(baseUrl, loggedInUserFFId || 'FF-00000');
+            // 1) Ensure persistent main click ID
+            const mainClickId = await ensureMainClickId(loggedInUserEmail) || 'CID-' + generateUniqueClickId();
+            loggedInUserMainClickId = mainClickId;
+            // update UI if visible
+            const ctEl = document.getElementById('aff-main-click-id');
+            if (ctEl) ctEl.innerText = mainClickId;
 
-            // Copy URL
+            // 2) Strip any existing admedia suffix
+            const baseUrl = linkUrl.split('admedia_')[0];
+
+            // 3) Build final URL with PERSISTENT clickId
+            const { url: finalUrl } = buildTrackingLink(baseUrl, loggedInUserFFId || 'FF-00000', mainClickId);
+
+            // 4) Copy URL
             try { await navigator.clipboard.writeText(finalUrl); }
             catch(e) { console.warn('Clipboard failed', e); }
 
-            // IP check (only now, on click)
+            // 5) IP fetch
             let clientIp = 'unknown';
             try {
                 const r = await fetch('https://api.ipify.org?format=json');
@@ -1456,24 +1593,30 @@
             const allowClick = await isNewIP(key, clientIp);
             const now = Date.now();
             const day = todayKey();
+            const eventId = generateUniqueClickId(); // unique event log id (separate from persistent click id)
 
-            // Always record tracking entry (even duplicates flagged)
-            const clickRef = ref(db, `trackings/${key}/${clickId}`);
-            await set(clickRef, {
-                timestamp: now,
-                ip: clientIp,
-                deviceFp: hashString(navigator.userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height),
-                campaignId: offerId || 'global',
-                conversion: false,
-                earnings: 0,
-                clickId: clickId,
-                affiliate: key,
-                affiliateFfId: loggedInUserFFId || 'FF-00000',
-                isDuplicate: !allowClick,
-                dateKey: day
-            });
+            // 6) Detailed per-event log (existing structure — kept)
+            try {
+                await set(ref(db, `trackings/${key}/${eventId}`), {
+                    timestamp: now,
+                    ip: clientIp,
+                    deviceFp: hashString(navigator.userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height),
+                    campaignId: offerId || 'global',
+                    conversion: false,
+                    earnings: 0,
+                    clickId: mainClickId,   // persistent click id
+                    eventId: eventId,
+                    affiliate: key,
+                    affiliateFfId: loggedInUserFFId || 'FF-00000',
+                    isDuplicate: !allowClick,
+                    dateKey: day
+                });
+            } catch(e) { console.warn('trackings write failed', e); }
 
-            // Update global stats
+            // 7) *** NEW: Aggregated counter + last timestamp ***
+            await recordClickForTracking(key, mainClickId);
+
+            // 8) User stats
             const userStatsRef = ref(db, `users/${key}/stats`);
             const statsSnap = await get(userStatsRef);
             const stats = statsSnap.exists() ? statsSnap.val() : {};
@@ -1486,7 +1629,7 @@
                 duplicateClicks: dupe
             });
 
-            // Daily counter (for 24h reset on dashboard)
+            // 9) Daily counter
             const dailyRef = ref(db, `dailyCounters/${key}/${day}`);
             const dailySnap = await get(dailyRef);
             const daily = dailySnap.exists() ? dailySnap.val() : { clicks: 0, leads: 0, earnings: 0 };
@@ -1505,7 +1648,7 @@
         };
 
         // ============================================================
-        //  REAL-TIME STATS SYNC (all-time + last 7 days + 24h reset)
+        //  REAL-TIME STATS SYNC
         // ============================================================
         function initializeRealtimeSync(key) {
             const userRef = ref(db, `users/${key}`);
@@ -1514,7 +1657,6 @@
                 const data = snap.val();
                 const s = data.stats || { clicks: 0, leads: 0, earnings: 0 };
 
-                // Header values
                 document.getElementById('top-balance-amount').innerText = `$${Number(s.earnings||0).toFixed(2)}`;
                 document.getElementById('bitcoin-payout-balance').innerText = `$${Number(s.earnings||0).toFixed(2)}`;
                 document.getElementById('stat-week-earn').innerText = `$${Number(s.earnings||0).toFixed(2)}`;
@@ -1538,7 +1680,6 @@
                 document.getElementById('circle-day').style.setProperty('--pgPercentage', dayPct);
                 document.getElementById('percent-day').innerText = `${dayPct}%`;
 
-                // Invoice auto-gen
                 const dow = new Date().getDay();
                 const ib = document.getElementById('bitcoin-invoices-table-body');
                 if (s.earnings >= 100 && (dow === 1 || dow === 2)) {
@@ -1551,7 +1692,6 @@
                     </tr>`;
                 }
 
-                // Referrals
                 const refList = data.referrals || {};
                 const refArray = Object.values(refList);
                 document.getElementById('ref-total-count').innerText = refArray.length;
@@ -1565,7 +1705,6 @@
                 }
             });
 
-            // Daily reset counter
             const day = todayKey();
             const dailyRef = ref(db, `dailyCounters/${key}/${day}`);
             onValue(dailyRef, (snap) => {
@@ -1577,7 +1716,6 @@
                 document.getElementById('metric-epc').innerText = `$${epc}`;
             });
 
-            // Last 7 days chart
             const trackingsRef = ref(db, `trackings/${key}`);
             onValue(trackingsRef, (snap) => {
                 if (window.incomeChart && snap.exists()) {
@@ -1598,6 +1736,22 @@
                     });
                     window.incomeChart.data.datasets[0].data = dailyEarnings;
                     window.incomeChart.update();
+                }
+            });
+
+            // === NEW: Affiliate-visible click tracking widget ===
+            const ctSummaryRef = ref(db, `clickTracking/${key}/summary`);
+            onValue(ctSummaryRef, (snap) => {
+                const totalEl = document.getElementById('aff-ct-total');
+                const lastEl = document.getElementById('aff-ct-last');
+                if (!totalEl || !lastEl) return;
+                if (snap.exists()) {
+                    const v = snap.val();
+                    totalEl.innerText = v.totalClicks || 0;
+                    lastEl.innerText = v.lastClickAt ? new Date(v.lastClickAt).toLocaleString() : '—';
+                } else {
+                    totalEl.innerText = 0;
+                    lastEl.innerText = '—';
                 }
             });
         }
@@ -1624,7 +1778,6 @@
             document.getElementById('login-section').classList.remove('hidden');
         });
 
-        // Forgot password flow
         document.getElementById('btn-forgot-submit').addEventListener('click', async () => {
             const email = document.getElementById('forgot-email').value.trim();
             const msg = document.getElementById('forgot-msg');
@@ -1640,7 +1793,6 @@
             }
         });
 
-        // Advertiser toggle → routes to advertiser dashboard
         document.getElementById('advertiserToggleBtn').addEventListener('click', async (e) => {
             e.preventDefault();
             try { await getRecaptchaToken('ADVERTISER_ACCESS'); } catch(e){}
@@ -1650,7 +1802,6 @@
             showAffiliateDashboard();
         });
 
-        // SIGNUP (expanded)
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const errEl = document.getElementById('signup-error-msg');
             errEl.innerText = "";
@@ -1685,7 +1836,6 @@
             if (pw.length < 6) { errEl.innerText = 'Password must be at least 6 characters.'; return; }
             if (!t1 || !t2 || !t3) { errEl.innerText = 'You must accept all Terms of Service checkboxes.'; return; }
 
-            // reCAPTCHA
             let token = null;
             try { token = await getRecaptchaToken('SIGNUP'); } catch(e){}
             if (token) document.getElementById('signup-recaptcha-token').value = token;
@@ -1694,6 +1844,7 @@
                 await createUserWithEmailAndPassword(auth, email, pw);
                 const key = safeKey(email);
                 const refCode = promo || 'NONE';
+                const mainClickId = 'CID-' + generateUniqueClickId();
                 await set(ref(db, `users/${key}/profile`), {
                     firstName, lastName, username, ffid,
                     name: `${firstName} ${lastName}`,
@@ -1705,10 +1856,10 @@
                     rank: 'Standard Affiliate',
                     btcWallet: '',
                     avatar: '',
+                    mainClickId: mainClickId,
                     createdAt: Date.now(),
                     recaptchaVerified: !!token
                 });
-                // stats baseline
                 await set(ref(db, `users/${key}/stats`), {
                     clicks: 0, uniqueClicks: 0, duplicateClicks: 0, leads: 0, earnings: 0, bonus: 0, payment: 0
                 });
@@ -1719,7 +1870,6 @@
             }
         });
 
-        // LOGIN
         document.getElementById('btn-login').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value.trim();
             const pw = document.getElementById('login-password').value;
@@ -1728,7 +1878,6 @@
 
             try { await getRecaptchaToken('LOGIN'); } catch(e){}
 
-            // Admin shortcut
             if (email === ADMIN_EMAIL && pw === ADMIN_PASSWORD) {
                 currentRole = 'admin';
                 saveSession(email, 'admin', 'ADMIN');
@@ -1736,7 +1885,6 @@
                 return;
             }
 
-            // Manager check
             try {
                 const mSnap = await get(ref(db, `managers/${safeKey(email)}`));
                 if (mSnap.exists()) {
@@ -1750,7 +1898,6 @@
                 }
             } catch(e) {}
 
-            // Affiliate login via Firebase
             try {
                 await signInWithEmailAndPassword(auth, email, pw);
                 const key = safeKey(email);
@@ -1764,15 +1911,15 @@
                 }
                 loggedInUserEmail = email;
                 loggedInUserFFId = prof.ffid || 'FF-00000';
+                loggedInUserMainClickId = prof.mainClickId || '';
                 currentRole = 'affiliate';
-                saveSession(email, 'affiliate', loggedInUserFFId);
+                saveSession(email, 'affiliate', loggedInUserFFId, loggedInUserMainClickId);
                 showAffiliateDashboard();
             } catch (err) {
                 errEl.innerText = err.message || 'Login failed.';
             }
         });
 
-        // Auto-resume session on page load
         window.addEventListener('load', async () => {
             const s = loadSession();
             if (!s) return;
@@ -1780,12 +1927,12 @@
             if (s.role === 'manager') { currentRole='manager'; loggedInUserEmail = s.email; showAdminDashboard(); return; }
             if (s.role === 'advertiser') { currentRole='advertiser'; loggedInUserEmail = s.email; showAffiliateDashboard(); return; }
             if (s.role === 'affiliate') {
-                // verify still approved
                 try {
                     const pSnap = await get(ref(db, `users/${safeKey(s.email)}/profile`));
                     if (pSnap.exists() && pSnap.val().status === 'Approved') {
                         loggedInUserEmail = s.email;
                         loggedInUserFFId = s.ffid || pSnap.val().ffid || 'FF-00000';
+                        loggedInUserMainClickId = pSnap.val().mainClickId || s.mainClickId || '';
                         currentRole = 'affiliate';
                         showAffiliateDashboard();
                     } else {
@@ -1808,6 +1955,15 @@
 
             if (loggedInUserEmail) {
                 const key = safeKey(loggedInUserEmail);
+                // ensure mainClickId
+                ensureMainClickId(loggedInUserEmail).then(cid => {
+                    loggedInUserMainClickId = cid || '';
+                    const ci = document.getElementById('profile-input-clickid');
+                    if (ci) ci.value = cid || '';
+                    const cw = document.getElementById('aff-main-click-id');
+                    if (cw) cw.innerText = cid || '—';
+                });
+
                 initializeRealtimeSync(key);
                 document.getElementById('user-referral-link').value = `https://app.admadia.site/ref?id=${loggedInUserFFId || key}`;
                 document.getElementById('user-ff-id-display').value = loggedInUserFFId || '';
@@ -1819,6 +1975,7 @@
                         document.getElementById('profile-input-ffid').value = p.ffid || '';
                         document.getElementById('profile-input-id').value = p.userId || '';
                         document.getElementById('profile-input-btc').value = p.btcWallet || '';
+                        document.getElementById('profile-input-clickid').value = p.mainClickId || '';
                         if (p.avatar) {
                             document.getElementById('header-avatar-img').src = p.avatar;
                             document.getElementById('profile-view-avatar').src = p.avatar;
@@ -1839,7 +1996,6 @@
             initializeAdminTrafficQuality();
         }
 
-        // ---------- View switcher ----------
         function switchView(viewId) {
             const views = [
                 'view-dashboard','view-balance','view-offers','view-smartlinks','view-reports',
@@ -1900,6 +2056,7 @@
             'admin-menu-users': 'admin-view-users',
             'admin-menu-advertiser-approvals': 'admin-view-advertiser-approvals',
             'admin-menu-live-earnings': 'admin-view-live-earnings',
+            'admin-menu-click-tracking': 'admin-view-click-tracking',
             'admin-menu-traffic-quality': 'admin-view-traffic-quality',
             'admin-menu-managers': 'admin-view-managers'
         };
@@ -1914,6 +2071,7 @@
                 if (view === 'admin-view-users') loadAdminUsersList();
                 if (view === 'admin-view-offers') loadAdminOffersList();
                 if (view === 'admin-view-live-earnings') initializeAdminLiveEarnings();
+                if (view === 'admin-view-click-tracking') initializeAdminClickTracking();
                 if (view === 'admin-view-traffic-quality') initializeAdminTrafficQuality();
                 if (view === 'admin-view-managers') loadManagersList();
             });
@@ -1921,7 +2079,7 @@
 
         // ---------- Logout ----------
         document.getElementById('btn-logout').addEventListener('click', () => {
-            loggedInUserEmail = ""; loggedInUserFFId = ""; currentRole = "";
+            loggedInUserEmail = ""; loggedInUserFFId = ""; loggedInUserMainClickId = ""; currentRole = "";
             clearSession();
             signOut(auth).catch(()=>{});
             document.getElementById('dashboard-section').classList.add('hidden');
@@ -2070,7 +2228,6 @@
             setInterval(pushDemo, 8000);
         }
 
-        // Active affiliates — online sorted first
         function populateActiveAffiliates500() {
             const listEl = document.getElementById('active-affiliates-list');
             const ranks = ['Top Earner 🥇', 'VIP Pro 💎', 'Super Affiliate ⚡', 'Pro Marketer 🚀'];
@@ -2078,7 +2235,6 @@
             for (let i = 1; i <= 500; i++) {
                 const geo = targetGeos[i % targetGeos.length];
                 const rank = ranks[i % ranks.length];
-                // Only top 40 shown as online, rest offline; online shown first
                 const online = i <= 40;
                 rows.push({ i, geo, rank, online });
             }
@@ -2105,7 +2261,6 @@
         // ============================================================
         function generateOffersData() {
             if (!currentApiKey) { cachedOffers = []; renderOfferLists('all'); return; }
-            // Load from Firebase first (admin managed); fallback to demo
             get(ref(db, 'offers')).then(snap => {
                 if (snap.exists()) {
                     cachedOffers = [];
@@ -2127,7 +2282,6 @@
                     renderOfferLists('all');
                     return;
                 }
-                // Fallback demo
                 const categories = [
                     { cat: 'install', label: 'App Install', payout: '$20 - $50', names: ['Mega Game Install','iOS Trading Setup','Crypto Wallet App'] },
                     { cat: 'sport', label: 'Credit Sport', payout: '$50 - $70', names: ['Premier League Sportsbook','Cricket Live Score Pass'] },
@@ -2210,8 +2364,7 @@
             document.getElementById('modal-id').innerText = id;
             document.getElementById('modal-category').innerText = cat;
             document.getElementById('modal-preview-url').href = url;
-            // build tracked link preview
-            const preview = buildTrackingLink(url, loggedInUserFFId || 'FF-00000');
+            const preview = buildTrackingLink(url, loggedInUserFFId || 'FF-00000', loggedInUserMainClickId || ('CID-' + generateUniqueClickId()));
             document.getElementById('modal-track-link').value = preview.url;
             document.getElementById('offer-modal').classList.remove('hidden');
         };
@@ -2278,10 +2431,10 @@
                 snap.forEach(c => {
                     const d = c.val();
                     if (d.timestamp >= sTs && d.timestamp <= eTs) {
-                        if (cf && c.key !== cf) return;
+                        if (cf && d.clickId !== cf && c.key !== cf) return;
                         h += `<tr>
                             <td>${new Date(d.timestamp).toLocaleString()}</td>
-                            <td><code>${c.key}</code></td>
+                            <td><code>${d.clickId||c.key}</code></td>
                             <td>${d.campaignId||'Global'}</td>
                             <td>${d.ip||'N/A'}</td>
                             <td>${d.conversion ? 'Yes':'No'}</td>
@@ -2351,7 +2504,7 @@
             try {
                 const snap = await get(ref(db, 'users'));
                 if (!snap.exists()) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding:15px;">No users found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding:15px;">No users found.</td></tr>';
                     return;
                 }
                 let h = '';
@@ -2367,6 +2520,7 @@
                             <td>${p.name || p.firstName || 'User'}</td>
                             <td>${p.email || key.replace(/_/g,'.')}</td>
                             <td>${p.ffid || '—'}</td>
+                            <td><code style="color:#1bc5bd;">${p.mainClickId || '—'}</code></td>
                             <td><span class="${statusClass}">${status}</span></td>
                             <td>
                                 <select class="form-control" style="padding:5px; font-size:11px; background: var(--card-bg); color: var(--text-main);" onchange="updateUserRank('${key}', this.value)">
@@ -2384,7 +2538,7 @@
                 });
                 tbody.innerHTML = h;
             } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#f64e60; padding:15px;">Error: ${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#f64e60; padding:15px;">Error: ${e.message}</td></tr>`;
             }
         }
         document.getElementById('admin-user-search').addEventListener('input', e => {
@@ -2395,8 +2549,6 @@
         });
         window.approveUser = async function(key) {
             await update(ref(db, `users/${key}/profile`), { status: 'Approved', approvedAt: Date.now() });
-            // "Approval email" — Firebase doesn't send custom emails without Cloud Functions.
-            // We log the event and record the notification so an admin sees it.
             await set(ref(db, `notifications/${key}/${Date.now()}`), {
                 type: 'approval', message: 'Account approved', createdAt: Date.now()
             });
@@ -2413,7 +2565,6 @@
             showToast(`Rank updated to ${rank}.`, 'success');
         };
 
-        // User detail modal
         window.openAdminUserModal = async function(key) {
             const modal = document.getElementById('admin-user-modal');
             const body = document.getElementById('admin-user-modal-body');
@@ -2433,6 +2584,7 @@
                     <div class="modal-detail-row"><span class="label">Username</span><span class="val">${p.username||'—'}</span></div>
                     <div class="modal-detail-row"><span class="label">Email</span><span class="val">${p.email||key}</span></div>
                     <div class="modal-detail-row"><span class="label">FF ID</span><span class="val">${p.ffid||'—'}</span></div>
+                    <div class="modal-detail-row"><span class="label">Main Click ID</span><span class="val" style="color:#1bc5bd; font-weight:bold;">${p.mainClickId||'—'}</span></div>
                     <div class="modal-detail-row"><span class="label">Country</span><span class="val">${p.country||'—'}</span></div>
                     <div class="modal-detail-row"><span class="label">Street</span><span class="val">${p.street||'—'}</span></div>
                     <div class="modal-detail-row"><span class="label">State / City / Zip</span><span class="val">${p.state||''} / ${p.city||''} / ${p.zip||''}</span></div>
@@ -2614,6 +2766,82 @@
         }
 
         // ============================================================
+        //  *** NEW: ADMIN — CLICK ID TRACKING LOG ***
+        // ============================================================
+        function initializeAdminClickTracking() {
+            const container = ref(db, 'clickTracking');
+            onValue(container, (snap) => {
+                const tbody = document.getElementById('admin-ct-table-body');
+                if (!tbody) return;
+                const searchVal = (document.getElementById('admin-ct-search')?.value || '').toLowerCase();
+
+                let totalClicks = 0, affiliateCount = 0, distinctClickIds = 0, lastGlobalAt = 0;
+                const rows = [];
+
+                if (snap.exists()) {
+                    snap.forEach(affSnap => {
+                        const affKey = affSnap.key;
+                        const affVal = affSnap.val() || {};
+                        const summary = affVal.summary || {};
+                        const clickIdsMap = affVal.clickIds || {};
+
+                        const affTotal = summary.totalClicks || 0;
+                        const affLast = summary.lastClickAt || 0;
+                        if (affTotal > 0) affiliateCount++;
+
+                        totalClicks += affTotal;
+                        if (affLast > lastGlobalAt) lastGlobalAt = affLast;
+
+                        const cidList = Object.keys(clickIdsMap);
+                        distinctClickIds += cidList.length;
+
+                        // build detail rows
+                        cidList.forEach(cid => {
+                            const c = clickIdsMap[cid] || {};
+                            rows.push({
+                                affKey,
+                                affTotal,
+                                affLast,
+                                cid,
+                                cidCount: c.count || 0,
+                                cidLast: c.lastClickAt || 0
+                            });
+                        });
+                    });
+                }
+
+                // summary cards
+                document.getElementById('ct-total-clicks').innerText = totalClicks;
+                document.getElementById('ct-total-affiliates').innerText = affiliateCount;
+                document.getElementById('ct-total-clickids').innerText = distinctClickIds;
+                document.getElementById('ct-last-click').innerText = lastGlobalAt ? new Date(lastGlobalAt).toLocaleTimeString() : '—';
+
+                // sort by last click desc
+                rows.sort((a,b) => (b.cidLast||0) - (a.cidLast||0));
+
+                let html = '';
+                rows.forEach(r => {
+                    if (searchVal && !r.affKey.toLowerCase().includes(searchVal)) return;
+                    html += `<tr>
+                        <td>${r.affKey.replace(/_/g,'.')}</td>
+                        <td><strong>${r.affTotal}</strong></td>
+                        <td>${r.affLast ? new Date(r.affLast).toLocaleString() : '—'}</td>
+                        <td><code style="color:#3699ff;">${r.cid}</code></td>
+                        <td><span class="ct-badge ok">${r.cidCount} clicks</span></td>
+                        <td>${r.cidLast ? new Date(r.cidLast).toLocaleString() : '—'}</td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding:15px;">No click tracking data yet. Ask affiliates to generate links.</td></tr>';
+            });
+        }
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.id === 'admin-ct-search') {
+                // trigger live filter via re-render
+                initializeAdminClickTracking();
+            }
+        });
+
+        // ============================================================
         //  ADMIN — TRAFFIC & IP QUALITY
         // ============================================================
         function initializeAdminTrafficQuality() {
@@ -2714,11 +2942,15 @@
             res.innerHTML = 'Searching...';
             try {
                 const snap = await get(ref(db, 'trackings'));
-                let found = null, aff = null;
+                let found = null, aff = null, evId = null;
                 if (snap.exists()) {
                     snap.forEach(aSnap => {
                         const tracks = aSnap.val();
-                        if (tracks[cid]) { found = tracks[cid]; aff = aSnap.key; return true; }
+                        Object.keys(tracks).forEach(k => {
+                            if (tracks[k].clickId === cid || k === cid) {
+                                found = tracks[k]; aff = aSnap.key; evId = k;
+                            }
+                        });
                     });
                 }
                 if (!found) { res.innerHTML = '<span style="color:#f64e60;">Click ID not found.</span>'; return; }
@@ -2726,16 +2958,17 @@
                     <div style="background: var(--card-bg); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <strong>Click Details</strong><br>
                         Click ID: <code>${cid}</code><br>
+                        Event ID: <code>${evId}</code><br>
                         Affiliate: ${aff.replace(/_/g,'.')}<br>
                         IP: ${found.ip||'N/A'}<br>
                         Timestamp: ${new Date(found.timestamp).toLocaleString()}<br>
                         Status: ${found.conversion ? 'Converted' : 'Pending'}<br>
-                        ${!found.conversion ? `<button class="btn-submit" style="margin-top:10px; width:auto; padding: 8px 20px;" onclick="approveLeadByClickId('${cid}', '${aff}')">Approve Lead (+$25)</button>` : ''}
+                        ${!found.conversion ? `<button class="btn-submit" style="margin-top:10px; width:auto; padding: 8px 20px;" onclick="approveLeadByClickId('${evId}', '${aff}')">Approve Lead (+$25)</button>` : ''}
                     </div>`;
             } catch(e) { res.innerHTML = `<span style="color:#f64e60;">Error: ${e.message}</span>`; }
         });
-        window.approveLeadByClickId = async function(cid, affKey) {
-            await update(ref(db, `trackings/${affKey}/${cid}`), { conversion: true, earnings: 25.00 });
+        window.approveLeadByClickId = async function(evId, affKey) {
+            await update(ref(db, `trackings/${affKey}/${evId}`), { conversion: true, earnings: 25.00 });
             const statsRef = ref(db, `users/${affKey}/stats`);
             const snap = await get(statsRef);
             const s = snap.exists() ? snap.val() : {};
@@ -2745,7 +2978,7 @@
             const dSnap = await get(dRef);
             const d = dSnap.exists() ? dSnap.val() : { clicks: 0, leads: 0, earnings: 0 };
             await set(dRef, { clicks: d.clicks||0, leads: (d.leads||0)+1, earnings: (d.earnings||0)+25 });
-            await set(ref(db, `leads/${Date.now()}`), { clickId: cid, affiliate: affKey, earnings: 25.00, timestamp: Date.now() });
+            await set(ref(db, `leads/${Date.now()}`), { clickId: evId, affiliate: affKey, earnings: 25.00, timestamp: Date.now() });
             playConversionSound();
             showToast('Lead approved and balance credited.', 'success');
             document.getElementById('btn-admin-search-click-id').click();
