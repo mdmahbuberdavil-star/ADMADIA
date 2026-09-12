@@ -2681,15 +2681,26 @@
     <!-- ============================================================
          Firebase Analytics — reuses existing app [FIX #5]
          ============================================================ -->
+     </script>
+
+    <!-- Firebase Analytics (kept intact) -->
     <script type="module">
-        import { getApps, getApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-        try {
-            if (await isSupported()) {
-                const app = getApps().length ? getApp() : null;
-                if (app) getAnalytics(app);
-            }
-        } catch (e) { /* analytics unavailable */ }
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyC3BWv3vXPezOg-LTMsZgoqOXAJH5UsvyY",
+        authDomain: "adbluemedia-156b6.firebaseapp.com",
+        databaseURL: "https://adbluemedia-156b6-default-rtdb.firebaseio.com",
+        projectId: "adbluemedia-156b6",
+        storageBucket: "adbluemedia-156b6.firebasestorage.app",
+        messagingSenderId: "898064142957",
+        appId: "1:898064142957:web:c077026297cd307e862564",
+        measurementId: "G-GE7P1D17LZ"
+      };
+      
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
