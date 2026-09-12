@@ -2681,26 +2681,24 @@
     <!-- ============================================================
          Firebase Analytics — reuses existing app [FIX #5]
          ============================================================ -->
-     </script>
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-    <!-- Firebase Analytics (kept intact) -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-      
-      const firebaseConfig = {
-        apiKey: "AIzaSyC3BWv3vXPezOg-LTMsZgoqOXAJH5UsvyY",
-        authDomain: "adbluemedia-156b6.firebaseapp.com",
-        databaseURL: "https://adbluemedia-156b6-default-rtdb.firebaseio.com",
-        projectId: "adbluemedia-156b6",
-        storageBucket: "adbluemedia-156b6.firebasestorage.app",
-        messagingSenderId: "898064142957",
-        appId: "1:898064142957:web:c077026297cd307e862564",
-        measurementId: "G-GE7P1D17LZ"
-      };
-      
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuxYpmKhHzzxqNYSw2UuKhBIech-km-4E",
+    authDomain: "david-5185e.firebaseapp.com",
+    projectId: "david-5185e",
+    storageBucket: "david-5185e.firebasestorage.app",
+    messagingSenderId: "880016540123",
+    appId: "1:880016540123:web:93d4f172b91ff254c7a7fe"
+       measurementId: "G-GE7P1D17LZ"
+  };
+
+
     </script>
 </body>
 </html>
