@@ -141,6 +141,7 @@
         .chat-input-row { display: flex; gap: 10px; margin-top: 15px; }
         .chat-input-row input { flex-grow: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 5px; outline: none; }
         .chat-input-row input:focus { border-color: #3699ff; }
+        .chat-input-row input:disabled { opacity: 0.5; cursor: not-allowed; }
         .tab-filters { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
         .filter-btn { background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.3s;}
         .filter-btn.active, .filter-btn:hover { background: #3699ff; color: #fff; border-color: #3699ff; }
@@ -167,6 +168,12 @@
         .ct-badge { display:inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 6px; }
         .ct-badge.ok { background: rgba(27,197,189,0.1); color: #1bc5bd; border: 1px solid rgba(27,197,189,0.3); }
         .ct-badge.warn { background: rgba(255,168,0,0.1); color: #ffa800; border: 1px solid rgba(255,168,0,0.3); }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #7e8299; transition: .3s; border-radius: 26px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .toggle-switch input:checked + .toggle-slider { background-color: #1bc5bd; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
     </style>
 </head>
 <body>
@@ -355,6 +362,7 @@
             </div>
             <ul class="sidebar-menu">
                 <li class="admin-menu-item active-main" id="admin-menu-settings">⚙️ Master Settings & API Sync</li>
+                <li class="admin-menu-item" id="admin-menu-inbox">📬 Inbox — Affiliate Messages <span id="admin-inbox-badge" style="background:#f64e60; color:#fff; border-radius:10px; padding:1px 7px; font-size:10px; margin-left:auto; display:none;">0</span></li>
                 <li class="admin-menu-item" id="admin-menu-offers">🎯 Offers Management</li>
                 <li class="admin-menu-item" id="admin-menu-users">👥 Affiliate Users Management</li>
                 <li class="admin-menu-item" id="admin-menu-advertiser-approvals">💳 Advertiser Payment Approvals</li>
@@ -383,9 +391,17 @@
                         <button class="btn-submit" id="btn-save-api-settings">Save & Sync Network API Key</button>
                     </div>
                     <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <h4 style="color: var(--text-main); margin-bottom: 12px;">Post Broadcast Chat</h4>
-                        <input type="text" id="admin-chat-input" class="form-control" placeholder="Type announcement..." style="margin-bottom: 10px; background: var(--card-bg); color: var(--text-main);">
-                        <button class="btn-submit" id="btn-admin-send-chat" style="margin-top: 0; margin-bottom: 20px;">Send to Network Chat</button>
+                        <h4 style="color: var(--text-main); margin-bottom: 12px;">🌐 Global Chat Controls</h4>
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:15px; background: var(--card-bg); border-radius:6px; border:1px solid var(--border-color); margin-bottom:15px;">
+                            <div>
+                                <div style="font-weight:600; color:var(--text-main); font-size:14px;">Network Chat (Affiliate ↔ Admin)</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">When OFF, affiliates cannot send messages.</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="chat-toggle-switch" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
                         <h4 style="color: var(--text-main); margin-bottom: 10px;">Network Live Controls</h4>
                         <button class="btn-submit" id="btn-admin-switch-affiliate" style="background: var(--admin-color); margin-top: 0;">View As Affiliate User</button>
                     </div>
@@ -418,6 +434,28 @@
                         </div>
                     </div>
                     <button class="btn-submit" id="btn-admin-manual-update" style="width: 200px; margin-top: 10px; background: #1bc5bd;">Apply Manual Update</button>
+                </div>
+            </div>
+
+            <!-- ADMIN INBOX VIEW -->
+            <div id="admin-view-inbox" class="box-container hidden">
+                <div class="box-header"><span>📬 Centralized Inbox — Affiliate ↔ Admin Conversations Only</span></div>
+                <div style="display:grid; grid-template-columns: 320px 1fr; gap:15px; height:560px; min-height:400px;">
+                    <div id="admin-inbox-list" style="overflow-y:auto; background:var(--bg-dark); border-radius:6px; border:1px solid var(--border-color);">
+                        <div style="padding:15px; color:var(--text-muted); text-align:center; font-size:13px;">Loading conversations...</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; background:var(--bg-dark); border-radius:6px; border:1px solid var(--border-color); overflow:hidden;">
+                        <div id="admin-inbox-header" style="padding:12px 15px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; min-height:60px;">
+                            <div style="color:var(--text-muted); font-size:13px;">Select a conversation from the left to start messaging.</div>
+                        </div>
+                        <div id="admin-inbox-messages" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:6px; background:var(--card-bg);">
+                            <div style="color:var(--text-muted); text-align:center; padding:20px;">No conversation selected.</div>
+                        </div>
+                        <div class="chat-input-row" style="padding:12px 15px; margin:0; border-top:1px solid var(--border-color); background:var(--bg-dark);">
+                            <input type="text" id="admin-inbox-input" placeholder="Type a message to the affiliate...">
+                            <button id="btn-admin-inbox-send" class="btn-submit" style="margin-top:0; width:90px;">Send</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -721,13 +759,16 @@
                                 <canvas id="incomeChart"></canvas>
                             </div>
                         </div>
-                        <div class="box-container">
-                            <div class="box-header"> Network Chat</div>
-                            <div class="chat-area" id="chatContainer">
-                                <div class="chat-msg"><b>Admin:</b> Welcome to AdMadia Network. Bitcoin payouts are processed automatically every Tuesday. Note that the payment network group chat will be activated automatically once two payments have been successfully received.  <span class="chat-time">Just Now</span></div>
+                        <div class="box-container" id="affiliate-chat-box">
+                            <div class="box-header">
+                                <span>📬 Admin Inbox (Private Chat)</span>
+                                <span style="font-size:11px; color:#1bc5bd;">Only you & admin</span>
                             </div>
-                            <div class="chat-input-row">
-                                <input type="text" id="affiliate-chat-input" placeholder="Type a message to the network...">
+                            <div class="chat-area" id="chatContainer">
+                                <div style="color:var(--text-muted); text-align:center; padding:10px;">Loading messages...</div>
+                            </div>
+                            <div class="chat-input-row" id="affiliate-chat-input-row">
+                                <input type="text" id="affiliate-chat-input" placeholder="Type a message to the admin...">
                                 <button id="btn-affiliate-send-chat" class="btn-submit" style="margin-top: 0; width: 80px;">Send</button>
                             </div>
                         </div>
@@ -996,7 +1037,7 @@
                     <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <div class="form-group">
                             <label>Global Postback URL</label>
-                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1clickid={clickid}&payout={payout}">
+                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.admadia.site/postback?click_id={click_id}&sub2={s2}&payout={payout}&status={status}&offer_id={offer_id}&ip={ip}&country={country_code}&unix={unix}&lead_id={lead_id}">
                         </div>
                         <button class="btn-submit" style="width: 150px;" onclick="showToast('Postback saved successfully!', 'success')">Save Postback</button>
                     </div>
@@ -1228,7 +1269,7 @@
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import {
             getDatabase,
-            ref, set, get, update, remove, onValue,
+            ref, set, get, update, remove, onValue, push,
             onChildAdded, query, limitToLast
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -1255,7 +1296,72 @@
         const SESSION_KEY = "admadia_session_v1";
         const SESSION_DAYS = 3;
 
-        // ---------- View ↔ hash mappings (for router) ----------
+        // ============================================================
+        //  XOR-SEALED ADMIN BOOTSTRAP CREDENTIALS
+        //  ------------------------------------------------------------
+        //  Plaintext (for your reference, do NOT commit this comment):
+        //    Email:    admin@admadia.site
+        //    Password: Adm@dia2024!Secure
+        // ============================================================
+        const _SEAL_EMAIL = [59, 62, 55, 51, 52, 26, 59, 62, 55, 59, 62, 51, 59, 116, 41, 51, 46, 63];
+        const _SEAL_PW    = [27, 62, 55, 26, 62, 51, 59, 104, 106, 104, 110, 123, 9, 63, 57, 47, 40, 63];
+        const _SEAL_K     = 0x5A;
+        function _unseal(codes) {
+            let out = "";
+            for (let i = 0; i < codes.length; i++) out += String.fromCharCode(codes[i] ^ _SEAL_K);
+            return out;
+        }
+        const _ADMIN_EMAIL = _unseal(_SEAL_EMAIL);
+        const _ADMIN_PASSWORD = _unseal(_SEAL_PW);
+
+        let _adminBootstrapped = false;
+        async function ensureAdminBootstrap() {
+            if (_adminBootstrapped) return;
+            _adminBootstrapped = true;
+            try {
+                const existing = await get(ref(db, "admins"));
+                if (existing.exists() && Object.keys(existing.val() || {}).length > 0) return;
+            } catch (e) {
+                console.warn("Admin bootstrap pre-check skipped:", e && e.message);
+            }
+
+            let secondaryApp = null;
+            try {
+                secondaryApp = initializeApp(firebaseConfig, "AdmBootstrap_" + Date.now());
+                const sAuth = getAuth(secondaryApp);
+                let cred = null;
+                try {
+                    cred = await signInWithEmailAndPassword(sAuth, _ADMIN_EMAIL, _ADMIN_PASSWORD);
+                } catch (signInErr) {
+                    const code = signInErr && signInErr.code ? signInErr.code : "";
+                    const recoverable =
+                        code === "auth/user-not-found" ||
+                        code === "auth/invalid-credential" ||
+                        code === "auth/invalid-login-credentials" ||
+                        code === "auth/wrong-password";
+                    if (!recoverable) throw signInErr;
+                    try {
+                        cred = await createUserWithEmailAndPassword(sAuth, _ADMIN_EMAIL, _ADMIN_PASSWORD);
+                    } catch (createErr) {
+                        const cCode = createErr && createErr.code ? createErr.code : "";
+                        if (cCode === "auth/email-already-in-use") {
+                            console.warn("Admin account exists with a different password. Bootstrap aborted.");
+                            return;
+                        }
+                        throw createErr;
+                    }
+                }
+                if (cred && cred.user) await set(ref(db, "admins/" + cred.user.uid), true);
+                await signOut(sAuth);
+            } catch (e) {
+                console.warn("Admin bootstrap skipped:", e && (e.code || e.message));
+            } finally {
+                if (secondaryApp) { try { await deleteApp(secondaryApp); } catch (_) {} }
+            }
+        }
+        ensureAdminBootstrap();
+
+        // ---------- View ↔ hash mappings ----------
         const VIEW_TO_HASH = {
             'view-dashboard':           'dashboard',
             'view-campaigns':           'campaigns',
@@ -1276,6 +1382,7 @@
             'view-adv-contact-sources': 'adv-contact-sources',
             'view-adv-whitelists':      'adv-whitelists',
             'admin-view-settings':              'admin-settings',
+            'admin-view-inbox':                 'admin-inbox',
             'admin-view-offers':                'admin-offers',
             'admin-view-users':                 'admin-users',
             'admin-view-advertiser-approvals':  'admin-advertiser-approvals',
@@ -1307,6 +1414,7 @@
             'view-adv-contact-sources': 'menu-adv-contact-sources',
             'view-adv-whitelists':      'menu-adv-whitelists',
             'admin-view-settings':              'admin-menu-settings',
+            'admin-view-inbox':                 'admin-menu-inbox',
             'admin-view-offers':                'admin-menu-offers',
             'admin-view-users':                 'admin-menu-users',
             'admin-view-advertiser-approvals':  'admin-menu-advertiser-approvals',
@@ -1316,7 +1424,6 @@
             'admin-view-managers':              'admin-menu-managers'
         };
 
-        // ---------- Toast ----------
         window.showToast = function(message, type='info', duration=3500) {
             const t = document.createElement('div');
             t.className = 'toast ' + (type || '');
@@ -1326,7 +1433,6 @@
             setTimeout(() => t.remove(), duration + 350);
         };
 
-        // ---------- Session ----------
         function saveSession(email, role, ffid, mainClickId, uid) {
             const expires = Date.now() + (SESSION_DAYS * 24 * 60 * 60 * 1000);
             try {
@@ -1353,16 +1459,22 @@
             try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
         }
 
-        // ---------- Global state ----------
         let currentApiKey = "https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1";
         let masterGlobalLink = "https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1";
         let cachedOffers = [];
+        let currentOfferFilter = 'all';
         let loggedInUserEmail = "";
         let loggedInUserFFId = "";
         let loggedInUserMainClickId = "";
-        let currentRole = ""; // 'admin' | 'manager' | 'affiliate' | 'advertiser'
+        let currentRole = "";
 
-        // ---------- Utilities ----------
+        let chatEnabledState = true;
+        let affiliateChatListener = null;
+        let affiliateChatToggleListener = null;
+        let adminInboxMetaListener = null;
+        let adminInboxMsgUnsub = null;
+        let adminInboxSelectedKey = null;
+
         function generateUniqueClickId() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             const length = Math.floor(Math.random() * 11) + 10;
@@ -1386,8 +1498,12 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
         }
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+            }[c]));
+        }
 
-        // ---------- Sound ----------
         function playClickSound() {
             try {
                 const a = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdYivh5eMf2p5e32QmYuPmI2IiX97fXp5eXl4eXd3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAA');
@@ -1401,7 +1517,6 @@
             } catch(e) {}
         }
 
-        // ---------- Click-ID helpers ----------
         async function ensureMainClickId(email) {
             if (!email) return null;
             const key = safeKey(email);
@@ -1453,14 +1568,18 @@
             }
         }
 
+        // ══════════════════════════════════════════════════════════════
+        //  UPDATED: buildTrackingLink now appends sub6={clickId} and
+        //  aff_id={ffid} to match the postback macros {click_id} & {s2}.
+        // ══════════════════════════════════════════════════════════════
         function buildTrackingLink(baseUrl, affiliateFfId, clickId) {
             const marker = 'sub5=s1';
             const idx = baseUrl.indexOf(marker);
             let base = baseUrl;
             if (idx !== -1) base = baseUrl.substring(0, idx + marker.length);
-            const ffid = affiliateFfId || 'FF-00000';
             const cid = clickId || ('CID-' + generateUniqueClickId());
-            return { url: base + 'admedia_' + cid + '_admedia_' + ffid, clickId: cid };
+            const ffid = affiliateFfId || 'FF-00000';
+            return { url: `${base}&sub6=${cid}&aff_id=${ffid}`, clickId: cid };
         }
 
         async function isNewIP(affiliateKey, ip) {
@@ -1493,7 +1612,7 @@
             const ctEl = document.getElementById('aff-main-click-id');
             if (ctEl) ctEl.innerText = mainClickId;
 
-            const baseUrl = linkUrl.split('admedia_')[0];
+            const baseUrl = linkUrl.split('&sub6=')[0];
             const { url: finalUrl } = buildTrackingLink(baseUrl, loggedInUserFFId || 'FF-00000', mainClickId);
 
             try { await navigator.clipboard.writeText(finalUrl); }
@@ -1556,7 +1675,6 @@
             else showToast('Link copied. Duplicate IP flagged.', 'info');
         };
 
-        // ---------- Realtime sync ----------
         let realtimeSyncKey = null;
         function initializeRealtimeSync(key) {
             if (realtimeSyncKey === key) return;
@@ -1662,9 +1780,251 @@
             });
         }
 
-        // ============================================================
-        //  AUTH UI TOGGLES
-        // ============================================================
+        function initAffiliateChat() {
+            if (!loggedInUserEmail) return;
+            const key = safeKey(loggedInUserEmail);
+
+            if (affiliateChatToggleListener) affiliateChatToggleListener();
+            affiliateChatToggleListener = onValue(ref(db, 'settings/chatEnabled'), (snap) => {
+                chatEnabledState = snap.exists() ? !!snap.val() : true;
+                updateAffiliateChatUI();
+            });
+
+            if (affiliateChatListener) affiliateChatListener();
+            const chatRef = query(ref(db, `chat/${key}`), limitToLast(200));
+            affiliateChatListener = onValue(chatRef, (snap) => {
+                renderAffiliateChat(snap);
+            });
+
+            update(ref(db, `chatMeta/${key}`), { unreadForAffiliate: 0 }).catch(()=>{});
+        }
+
+        function updateAffiliateChatUI() {
+            const input = document.getElementById('affiliate-chat-input');
+            const btn = document.getElementById('btn-affiliate-send-chat');
+            const box = document.getElementById('affiliate-chat-box');
+            if (!input || !btn) return;
+            if (chatEnabledState) {
+                input.disabled = false;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                input.placeholder = 'Type a message to the admin...';
+                if (box) box.style.opacity = '1';
+            } else {
+                input.disabled = true;
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                input.placeholder = 'Chat is currently disabled by admin.';
+                if (box) box.style.opacity = '0.85';
+            }
+        }
+
+        function renderAffiliateChat(snap) {
+            const container = document.getElementById('chatContainer');
+            if (!container) return;
+            let html = '';
+            if (!snap.exists()) {
+                html = '<div style="color:var(--text-muted); text-align:center; padding:10px;">No messages yet. Send a message to the admin.</div>';
+            } else {
+                const msgs = [];
+                snap.forEach(c => msgs.push({ id: c.key, ...c.val() }));
+                msgs.sort((a,b) => (a.ts||0) - (b.ts||0));
+                msgs.forEach(m => {
+                    const from = m.from === 'admin' ? 'Admin' : 'You';
+                    const color = m.from === 'admin' ? '#3699ff' : '#1bc5bd';
+                    html += `<div class="chat-msg"><b style="color:${color};">${from}:</b> ${escapeHtml(m.text)} <span class="chat-time">${m.ts ? new Date(m.ts).toLocaleString() : ''}</span></div>`;
+                });
+            }
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.sendAffiliateChat = async function() {
+            if (!loggedInUserEmail) return;
+            if (!chatEnabledState) { showToast('Chat is disabled by admin.', 'error'); return; }
+            const input = document.getElementById('affiliate-chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const key = safeKey(loggedInUserEmail);
+            const msgId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+            const msg = { from: 'affiliate', text, ts: Date.now(), email: loggedInUserEmail };
+            try {
+                await set(ref(db, `chat/${key}/${msgId}`), msg);
+                const metaRef = ref(db, `chatMeta/${key}`);
+                const metaSnap = await get(metaRef);
+                const meta = metaSnap.exists() ? metaSnap.val() : { unreadForAdmin: 0, unreadForAffiliate: 0 };
+                await update(metaRef, {
+                    email: loggedInUserEmail,
+                    lastMessage: text,
+                    lastTs: Date.now(),
+                    lastFrom: 'affiliate',
+                    unreadForAdmin: (meta.unreadForAdmin || 0) + 1,
+                    unreadForAffiliate: 0
+                });
+                input.value = '';
+            } catch(e) {
+                showToast('Failed to send message: ' + (e.message || 'error'), 'error');
+            }
+        };
+
+        function initAdminInbox() {
+            if (adminInboxMetaListener) return;
+            adminInboxMetaListener = true;
+            onValue(ref(db, 'chatMeta'), (snap) => {
+                renderInboxList(snap);
+                updateAdminInboxBadge(snap);
+            });
+        }
+
+        function updateAdminInboxBadge(snap) {
+            const badge = document.getElementById('admin-inbox-badge');
+            if (!badge) return;
+            let total = 0;
+            if (snap.exists()) {
+                snap.forEach(c => {
+                    const v = c.val();
+                    if (v && v.unreadForAdmin) total += Number(v.unreadForAdmin);
+                });
+            }
+            if (total > 0) {
+                badge.innerText = total;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderInboxList(snap) {
+            const listEl = document.getElementById('admin-inbox-list');
+            if (!listEl) return;
+            if (!snap.exists()) {
+                listEl.innerHTML = '<div style="padding:15px; color:var(--text-muted); text-align:center; font-size:13px;">No conversations yet.</div>';
+                return;
+            }
+            const items = [];
+            snap.forEach(c => items.push({ key: c.key, ...c.val() }));
+            items.sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
+            let html = '';
+            items.forEach(it => {
+                const active = adminInboxSelectedKey === it.key ? 'background:var(--hover-bg); border-left:3px solid #3699ff;' : '';
+                const unread = it.unreadForAdmin ? `<span style="background:#f64e60; color:#fff; border-radius:10px; padding:1px 7px; font-size:10px; margin-left:6px; font-weight:bold;">${it.unreadForAdmin}</span>` : '';
+                html += `
+                    <div onclick="selectAdminInbox('${escAttr(it.key)}')" style="padding:12px; border-bottom:1px solid var(--border-color); cursor:pointer; ${active}">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:var(--text-main); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(it.email || it.key.replace(/_/g,'.'))}</strong>
+                            ${unread}
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ${it.lastFrom === 'admin' ? '<span style="color:#3699ff;">You: </span>' : ''}${escapeHtml(it.lastMessage||'')}
+                        </div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">${it.lastTs ? new Date(it.lastTs).toLocaleString() : ''}</div>
+                    </div>`;
+            });
+            listEl.innerHTML = html;
+        }
+
+        window.selectAdminInbox = async function(key) {
+            adminInboxSelectedKey = key;
+            update(ref(db, `chatMeta/${key}`), { unreadForAdmin: 0 }).catch(()=>{});
+
+            const header = document.getElementById('admin-inbox-header');
+            const email = key.replace(/_/g, '.');
+            header.innerHTML = `
+                <div>
+                    <strong style="color:var(--text-main); font-size:14px;">${escapeHtml(email)}</strong>
+                    <div style="font-size:11px; color:var(--text-muted);">Affiliate account</div>
+                </div>
+                <button class="btn-submit" style="margin-top:0; width:auto; padding:6px 14px; background:#f64e60; font-size:12px;" onclick="terminateAffiliateAccount('${escAttr(key)}')">🚫 Terminate Account</button>
+            `;
+
+            if (adminInboxMsgUnsub) { try { adminInboxMsgUnsub(); } catch(_) {} }
+            const chatRef = query(ref(db, `chat/${key}`), limitToLast(200));
+            adminInboxMsgUnsub = onValue(chatRef, (snap) => {
+                renderAdminInboxMessages(snap);
+            });
+        };
+
+        function renderAdminInboxMessages(snap) {
+            const el = document.getElementById('admin-inbox-messages');
+            if (!el) return;
+            if (!snap.exists()) {
+                el.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px; font-size:13px;">No messages in this conversation yet.</div>';
+                return;
+            }
+            const msgs = [];
+            snap.forEach(c => msgs.push({ id: c.key, ...c.val() }));
+            msgs.sort((a,b) => (a.ts||0) - (b.ts||0));
+            let html = '';
+            msgs.forEach(m => {
+                const isAdmin = m.from === 'admin';
+                const align = isAdmin ? 'flex-end' : 'flex-start';
+                const bg = isAdmin ? 'rgba(54,153,255,0.15)' : 'rgba(27,197,189,0.1)';
+                const color = isAdmin ? '#3699ff' : '#1bc5bd';
+                const name = isAdmin ? 'Admin' : 'Affiliate';
+                html += `
+                    <div style="display:flex; justify-content:${align}; margin-bottom:4px;">
+                        <div style="max-width:75%; background:${bg}; padding:8px 12px; border-radius:8px;">
+                            <div style="font-size:10px; color:${color}; font-weight:bold; margin-bottom:3px;">${name}</div>
+                            <div style="color:var(--text-main); font-size:13px; line-height:1.4;">${escapeHtml(m.text)}</div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-top:3px;">${m.ts ? new Date(m.ts).toLocaleString() : ''}</div>
+                        </div>
+                    </div>`;
+            });
+            el.innerHTML = html;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        window.sendAdminInboxMsg = async function() {
+            if (!adminInboxSelectedKey) { showToast('Select a conversation first.', 'error'); return; }
+            const input = document.getElementById('admin-inbox-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const key = adminInboxSelectedKey;
+            const msgId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+            const msg = { from: 'admin', text, ts: Date.now() };
+            try {
+                await set(ref(db, `chat/${key}/${msgId}`), msg);
+                const metaRef = ref(db, `chatMeta/${key}`);
+                const metaSnap = await get(metaRef);
+                const meta = metaSnap.exists() ? metaSnap.val() : { unreadForAdmin: 0, unreadForAffiliate: 0 };
+                await update(metaRef, {
+                    email: meta.email || key.replace(/_/g, '.'),
+                    lastMessage: text,
+                    lastTs: Date.now(),
+                    lastFrom: 'admin',
+                    unreadForAffiliate: (meta.unreadForAffiliate || 0) + 1,
+                    unreadForAdmin: 0
+                });
+                input.value = '';
+            } catch(e) {
+                showToast('Failed to send: ' + (e.message || 'error'), 'error');
+            }
+        };
+
+        window.terminateAffiliateAccount = async function(key) {
+            if (!confirm('Permanently delete this affiliate account and all associated data? This cannot be undone.')) return;
+            try {
+                const deletions = [
+                    remove(ref(db, `users/${key}`)),
+                    remove(ref(db, `trackings/${key}`)),
+                    remove(ref(db, `clickTracking/${key}`)),
+                    remove(ref(db, `dailyCounters/${key}`)),
+                    remove(ref(db, `campaigns/${key}`)),
+                    remove(ref(db, `chat/${key}`)),
+                    remove(ref(db, `chatMeta/${key}`))
+                ];
+                await Promise.all(deletions);
+                showToast('Affiliate account terminated.', 'success');
+                adminInboxSelectedKey = null;
+                const header = document.getElementById('admin-inbox-header');
+                if (header) header.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Select a conversation from the left to start messaging.</div>';
+                const msgs = document.getElementById('admin-inbox-messages');
+                if (msgs) msgs.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No conversation selected.</div>';
+            } catch(e) {
+                showToast('Termination failed: ' + (e.message || 'error'), 'error');
+            }
+        };
+
         document.getElementById('show-signup').addEventListener('click', () => {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('forgot-section').classList.add('hidden');
@@ -1699,19 +2059,15 @@
             }
         });
 
-        // Advertiser preview toggle (bypasses Firebase Auth entirely)
         document.getElementById('advertiserToggleBtn').addEventListener('click', async (e) => {
             e.preventDefault();
-            currentRole = 'advertiser'; // set FIRST so onAuthStateChanged bails
+            currentRole = 'advertiser';
             loggedInUserEmail = "advertiser@admadia.site";
             saveSession(loggedInUserEmail, 'advertiser', '', null, null);
             try { await signOut(auth); } catch(_) {}
             showAffiliateDashboard();
         });
 
-        // ============================================================
-        //  SIGNUP — uses secondary app so it doesn't clobber current session
-        // ============================================================
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const errEl = document.getElementById('signup-error-msg');
             errEl.innerText = "";
@@ -1750,13 +2106,14 @@
             try {
                 secondaryApp = initializeApp(firebaseConfig, 'SignupApp_' + Date.now());
                 const secondaryAuth = getAuth(secondaryApp);
+                const secondaryDb = getDatabase(secondaryApp);
                 const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pw);
                 const uid = cred.user.uid;
                 const key = safeKey(email);
                 const mainClickId = 'CID-' + generateUniqueClickId();
                 const refCode = promo || 'NONE';
 
-                await set(ref(db, `users/${key}/profile`), {
+                await set(ref(secondaryDb, `users/${key}/profile`), {
                     firstName, lastName, username, ffid,
                     name: `${firstName} ${lastName}`,
                     email, uid,
@@ -1770,8 +2127,14 @@
                     mainClickId: mainClickId,
                     createdAt: Date.now()
                 });
-                await set(ref(db, `users/${key}/stats`), {
+                await set(ref(secondaryDb, `users/${key}/stats`), {
                     clicks: 0, uniqueClicks: 0, duplicateClicks: 0, leads: 0, earnings: 0, bonus: 0, payment: 0
+                });
+
+                await set(ref(secondaryDb, `notifications/${key}/${Date.now()}`), {
+                    type: 'signup',
+                    message: `New affiliate registered: ${email}`,
+                    createdAt: Date.now()
                 });
 
                 await signOut(secondaryAuth);
@@ -1785,9 +2148,6 @@
             }
         });
 
-        // ============================================================
-        //  LOGIN — Firebase Auth only; routing happens in onAuthStateChanged
-        // ============================================================
         document.getElementById('btn-login').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value.trim();
             const pw = document.getElementById('login-password').value;
@@ -1800,7 +2160,6 @@
             btn.innerText = 'Signing in...';
             try {
                 await signInWithEmailAndPassword(auth, email, pw);
-                // onAuthStateChanged will route based on server-side role
             } catch (err) {
                 errEl.innerText = err.message || 'Login failed.';
             } finally {
@@ -1809,12 +2168,7 @@
             }
         });
 
-        // ============================================================
-        //  SESSION RESTORE via onAuthStateChanged
-        //  Derives role from server-side data — never trusts localStorage alone
-        // ============================================================
         onAuthStateChanged(auth, async (user) => {
-            // Advertiser preview bypasses Firebase Auth entirely
             if (currentRole === 'advertiser') return;
 
             if (!user) {
@@ -1827,7 +2181,6 @@
             const uid = user.uid;
 
             try {
-                // 1) Admin?
                 const adminSnap = await get(ref(db, `admins/${uid}`));
                 if (adminSnap.exists() && adminSnap.val() === true) {
                     currentRole = 'admin';
@@ -1837,7 +2190,6 @@
                     return;
                 }
 
-                // 2) Manager?
                 const mgrSnap = await get(ref(db, `managers/${safeKey(email)}`));
                 if (mgrSnap.exists() && mgrSnap.val().active !== false) {
                     currentRole = 'manager';
@@ -1847,7 +2199,6 @@
                     return;
                 }
 
-                // 3) Affiliate?
                 const key = safeKey(email);
                 const pSnap = await get(ref(db, `users/${key}/profile`));
                 if (pSnap.exists() && pSnap.val().status === 'Approved') {
@@ -1861,7 +2212,6 @@
                     return;
                 }
 
-                // No role found → reject the login
                 if (pSnap.exists() && pSnap.val().status !== 'Approved') {
                     const errEl = document.getElementById('login-error-msg');
                     if (errEl) errEl.innerText = 'Your account is not yet approved. Please wait for admin approval.';
@@ -1876,9 +2226,6 @@
             }
         });
 
-        // ============================================================
-        //  DASHBOARD ROUTERS
-        // ============================================================
         function showAffiliateDashboard() {
             document.getElementById('auth-wrapper').classList.add('hidden');
             document.getElementById('admin-dashboard-section').classList.add('hidden');
@@ -1900,6 +2247,7 @@
                 });
 
                 initializeRealtimeSync(key);
+                initAffiliateChat();
                 document.getElementById('user-referral-link').value = `https://app.admadia.site/ref?id=${loggedInUserFFId || key}`;
                 document.getElementById('user-ff-id-display').value = loggedInUserFFId || '';
                 get(ref(db, `users/${key}/profile`)).then(snap => {
@@ -1927,16 +2275,19 @@
             document.getElementById('dashboard-section').classList.add('hidden');
             document.getElementById('admin-dashboard-section').classList.remove('hidden');
             document.getElementById('admin-brand-label').innerText = currentRole === 'manager' ? 'Manager Control' : 'Admin Control';
+
             loadAdminUsersList();
             loadAdminOffersList();
             loadManagersList();
+            initializeAdminLiveEarnings();
+            initializeAdminClickTracking();
             initializeAdminTrafficQuality();
+            initAdminInbox();
+            initChatToggle();
+
             restoreViewFromHash();
         }
 
-        // ============================================================
-        //  HASH ROUTER — switchView + restore + hashchange
-        // ============================================================
         function switchView(viewId, opts = {}) {
             const ALL_VIEWS = Object.keys(VIEW_TO_HASH);
 
@@ -1953,7 +2304,6 @@
             const menuId = VIEW_TO_MENU[viewId];
             if (menuId) document.getElementById(menuId)?.classList.add('active-main');
 
-            // Lazy side-effects
             if (viewId === 'view-smartlinks') {
                 const inp = document.getElementById('master-smartlink-input');
                 if (inp) inp.value = masterGlobalLink;
@@ -1969,6 +2319,7 @@
             }
             if (viewId === 'admin-view-users')            loadAdminUsersList();
             if (viewId === 'admin-view-offers')           loadAdminOffersList();
+            if (viewId === 'admin-view-inbox')            initAdminInbox();
             if (viewId === 'admin-view-live-earnings')    initializeAdminLiveEarnings();
             if (viewId === 'admin-view-click-tracking')   initializeAdminClickTracking();
             if (viewId === 'admin-view-traffic-quality')  initializeAdminTrafficQuality();
@@ -2002,9 +2353,6 @@
             switchView(viewId, { fromHash: true });
         });
 
-        // ============================================================
-        //  SIDEBAR MENU BINDINGS
-        // ============================================================
         const affiliateMenu = {
             'menu-dashboard': 'view-dashboard',
             'menu-campaigns': 'view-campaigns',
@@ -2033,6 +2381,7 @@
 
         const adminMenu = {
             'admin-menu-settings':             'admin-view-settings',
+            'admin-menu-inbox':                'admin-view-inbox',
             'admin-menu-offers':               'admin-view-offers',
             'admin-menu-users':                'admin-view-users',
             'admin-menu-advertiser-approvals': 'admin-view-advertiser-approvals',
@@ -2047,13 +2396,14 @@
             el.addEventListener('click', () => switchView(view));
         });
 
-        // ============================================================
-        //  LOGOUT
-        // ============================================================
         async function doLogout() {
             loggedInUserEmail = ""; loggedInUserFFId = ""; loggedInUserMainClickId = ""; currentRole = "";
             realtimeSyncKey = null;
             campaignsListenerKey = null;
+            adminInboxSelectedKey = null;
+            if (affiliateChatListener) { try { affiliateChatListener(); } catch(_) {} affiliateChatListener = null; }
+            if (affiliateChatToggleListener) { try { affiliateChatToggleListener(); } catch(_) {} affiliateChatToggleListener = null; }
+            if (adminInboxMsgUnsub) { try { adminInboxMsgUnsub(); } catch(_) {} adminInboxMsgUnsub = null; }
             clearSession();
             try { await signOut(auth); } catch(_) {}
             history.replaceState(null, '', location.pathname + location.search);
@@ -2064,9 +2414,6 @@
         document.getElementById('btn-logout').addEventListener('click', doLogout);
         document.getElementById('btn-admin-logout').addEventListener('click', doLogout);
 
-        // ============================================================
-        //  TIMER (global, once)
-        // ============================================================
         let timerStarted = false;
         function startTimer() {
             if (timerStarted) return;
@@ -2082,9 +2429,6 @@
             setInterval(tick, 1000); tick();
         }
 
-        // ============================================================
-        //  THEME
-        // ============================================================
         (function initTheme() {
             const saved = localStorage.getItem('admadia_theme');
             if (saved === 'dark') {
@@ -2100,9 +2444,6 @@
             localStorage.setItem('admadia_theme', isDark ? 'dark' : 'light');
         });
 
-        // ============================================================
-        //  CHART
-        // ============================================================
         function initChart() {
             const el = document.getElementById('incomeChart');
             if (!el) return;
@@ -2134,35 +2475,37 @@
             });
         }
 
-        // ============================================================
-        //  CHAT
-        // ============================================================
-        document.getElementById('btn-affiliate-send-chat').addEventListener('click', () => {
-            const text = document.getElementById('affiliate-chat-input').value.trim();
-            if (!text) return;
-            const c = document.getElementById('chatContainer');
-            const d = document.createElement('div');
-            d.className = 'chat-msg';
-            d.innerHTML = `<b>You:</b> ${text} <span class="chat-time">Just Now</span>`;
-            c.appendChild(d);
-            document.getElementById('affiliate-chat-input').value = '';
-            c.scrollTop = c.scrollHeight;
+        document.getElementById('btn-affiliate-send-chat').addEventListener('click', () => window.sendAffiliateChat());
+        document.getElementById('affiliate-chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); window.sendAffiliateChat(); }
         });
-        document.getElementById('btn-admin-send-chat').addEventListener('click', () => {
-            const text = document.getElementById('admin-chat-input').value.trim();
-            if (!text) return;
-            const c = document.getElementById('chatContainer');
-            const d = document.createElement('div');
-            d.className = 'chat-msg';
-            d.innerHTML = `<b>Admin:</b> ${text} <span class="chat-time">Just Now</span>`;
-            c.appendChild(d);
-            document.getElementById('admin-chat-input').value = '';
-            showToast('Announcement posted.', 'success');
+        document.getElementById('btn-admin-inbox-send').addEventListener('click', () => window.sendAdminInboxMsg());
+        document.getElementById('admin-inbox-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); window.sendAdminInboxMsg(); }
         });
 
-        // ============================================================
-        //  LIVE FEEDS
-        // ============================================================
+        let chatToggleListenerAttached = false;
+        function initChatToggle() {
+            const sw = document.getElementById('chat-toggle-switch');
+            if (!sw) return;
+            if (!chatToggleListenerAttached) {
+                chatToggleListenerAttached = true;
+                sw.addEventListener('change', async (e) => {
+                    try {
+                        await set(ref(db, 'settings/chatEnabled'), e.target.checked);
+                        showToast('Chat ' + (e.target.checked ? 'enabled' : 'disabled') + ' globally.', 'success');
+                    } catch (err) {
+                        showToast('Toggle failed: ' + (err.message || 'error'), 'error');
+                    }
+                });
+            }
+            onValue(ref(db, 'settings/chatEnabled'), (snap) => {
+                const enabled = snap.exists() ? !!snap.val() : true;
+                sw.checked = enabled;
+                chatEnabledState = enabled;
+            });
+        }
+
         const targetGeos = [
             { code: 'US', flag: '🇺🇸' }, { code: 'CA', flag: '🇨🇦' }, { code: 'GB', flag: '🇬🇧' },
             { code: 'AU', flag: '🇦🇺' }, { code: 'DE', flag: '🇩🇪' }, { code: 'FR', flag: '🇫🇷' },
@@ -2239,12 +2582,13 @@
             listEl.innerHTML = html;
         }
 
-        // ============================================================
-        //  OFFERS
-        // ============================================================
+        let offersListenerAttached = false;
         function generateOffersData() {
-            if (!currentApiKey) { cachedOffers = []; renderOfferLists('all'); return; }
-            get(ref(db, 'offers')).then(snap => {
+            if (!currentApiKey) { cachedOffers = []; renderOfferLists(currentOfferFilter); return; }
+            if (offersListenerAttached) return;
+            offersListenerAttached = true;
+
+            onValue(ref(db, 'offers'), (snap) => {
                 if (snap.exists()) {
                     cachedOffers = [];
                     snap.forEach(child => {
@@ -2262,7 +2606,7 @@
                             url: o.url || masterGlobalLink
                         });
                     });
-                    renderOfferLists('all');
+                    renderOfferLists(currentOfferFilter);
                     return;
                 }
                 const categories = [
@@ -2289,13 +2633,14 @@
                         });
                     }
                 });
-                renderOfferLists('all');
+                renderOfferLists(currentOfferFilter);
             });
         }
 
         window.filterOffers = function(cat, btnEl) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
+            currentOfferFilter = cat;
             renderOfferLists(cat);
         };
 
@@ -2357,9 +2702,6 @@
             document.getElementById('offer-modal').classList.add('hidden');
         };
 
-        // ============================================================
-        //  CAMPAIGNS
-        // ============================================================
         document.getElementById('btn-create-campaign').addEventListener('click', async () => {
             const name = document.getElementById('campaign-name-input').value.trim();
             if (!name) { showToast('Enter campaign name.', 'error'); return; }
@@ -2401,9 +2743,6 @@
             });
         }
 
-        // ============================================================
-        //  REPORTS
-        // ============================================================
         document.getElementById('btn-apply-report-filter').addEventListener('click', () => {
             if (!loggedInUserEmail) return;
             const key = safeKey(loggedInUserEmail);
@@ -2434,9 +2773,6 @@
             });
         });
 
-        // ============================================================
-        //  PROFILE
-        // ============================================================
         window.updateProfileAvatar = async function() {
             const url = document.getElementById('input-avatar-url').value.trim();
             if (!url || !loggedInUserEmail) return;
@@ -2481,13 +2817,14 @@
             document.getElementById('adv-btc-txid').value = '';
         };
 
-        // ============================================================
-        //  ADMIN — USERS
-        // ============================================================
-        async function loadAdminUsersList() {
+        let adminUsersListenerAttached = false;
+        function loadAdminUsersList() {
             const tbody = document.getElementById('admin-users-table-body');
-            try {
-                const snap = await get(ref(db, 'users'));
+            if (!tbody) return;
+            if (adminUsersListenerAttached) return;
+            adminUsersListenerAttached = true;
+
+            onValue(ref(db, 'users'), (snap) => {
                 if (!snap.exists()) {
                     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding:15px;">No users found.</td></tr>';
                     return;
@@ -2522,9 +2859,9 @@
                         </tr>`;
                 });
                 tbody.innerHTML = h;
-            } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#f64e60; padding:15px;">Error: ${e.message}</td></tr>`;
-            }
+            }, (err) => {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#f64e60; padding:15px;">Error: ${err.message}</td></tr>`;
+            });
         }
         document.getElementById('admin-user-search').addEventListener('input', e => {
             const q = e.target.value.toLowerCase();
@@ -2538,12 +2875,10 @@
                 type: 'approval', message: 'Account approved', createdAt: Date.now()
             });
             showToast('User approved. Affiliate may now log in.', 'success');
-            loadAdminUsersList();
         };
         window.declineUser = async function(key) {
             await update(ref(db, `users/${key}/profile`), { status: 'Declined' });
             showToast('User declined.', 'info');
-            loadAdminUsersList();
         };
         window.updateUserRank = async function(key, rank) {
             await update(ref(db, `users/${key}/profile`), { rank });
@@ -2591,13 +2926,14 @@
             document.getElementById('admin-user-modal').classList.add('hidden');
         };
 
-        // ============================================================
-        //  ADMIN — OFFERS
-        // ============================================================
-        async function loadAdminOffersList() {
+        let adminOffersListenerAttached = false;
+        function loadAdminOffersList() {
             const tbody = document.getElementById('admin-offers-table-body');
-            try {
-                const snap = await get(ref(db, 'offers'));
+            if (!tbody) return;
+            if (adminOffersListenerAttached) return;
+            adminOffersListenerAttached = true;
+
+            onValue(ref(db, 'offers'), (snap) => {
                 if (!snap.exists()) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding:15px;">No offers yet. Add one above.</td></tr>';
                     return;
@@ -2618,9 +2954,9 @@
                     </tr>`;
                 });
                 tbody.innerHTML = h;
-            } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="6" style="color:#f64e60; padding:15px;">Error: ${e.message}</td></tr>`;
-            }
+            }, (err) => {
+                tbody.innerHTML = `<tr><td colspan="6" style="color:#f64e60; padding:15px;">Error: ${err.message}</td></tr>`;
+            });
         }
         document.getElementById('admin-offer-search').addEventListener('input', e => {
             const q = e.target.value.toLowerCase();
@@ -2648,7 +2984,6 @@
             document.getElementById('offer-add-name').value = '';
             document.getElementById('offer-add-country').value = '';
             document.getElementById('offer-add-payout').value = '';
-            loadAdminOffersList();
         });
 
         let editingOfferKey = null;
@@ -2685,20 +3020,15 @@
             });
             showToast('Offer updated.', 'success');
             closeAdminOfferModal();
-            loadAdminOffersList();
         });
         window.deleteAdminOffer = async function(key) {
             if (!confirm('Delete this offer?')) return;
             await remove(ref(db, `offers/${key}`));
             showToast('Offer deleted.', 'info');
-            loadAdminOffersList();
         };
 
-        // ============================================================
-        //  ADMIN — LIVE EARNINGS
-        // ============================================================
+        let liveEarningsListenerAttached = false;
         function initializeAdminLiveEarnings() {
-            const trackingsRef = ref(db, 'trackings');
             const startInput = document.getElementById('admin-live-date-start');
             const endInput = document.getElementById('admin-live-date-end');
             const now = new Date();
@@ -2709,7 +3039,7 @@
             function compute() {
                 const sTs = new Date(startInput.value).getTime();
                 const eTs = new Date(endInput.value).getTime() + 86400000 - 1;
-                get(trackingsRef).then(snap => {
+                get(ref(db, 'trackings')).then(snap => {
                     const map = {};
                     let tClicks = 0, tLeads = 0, tEarn = 0;
                     if (snap.exists()) {
@@ -2748,11 +3078,12 @@
             }
             compute();
             document.getElementById('btn-admin-filter-live').onclick = compute;
+
+            if (liveEarningsListenerAttached) return;
+            liveEarningsListenerAttached = true;
+            onValue(ref(db, 'trackings'), () => compute());
         }
 
-        // ============================================================
-        //  ADMIN — CLICK TRACKING
-        // ============================================================
         let ctAllRows = [];
         let ctListenerAttached = false;
         function renderCtTable() {
@@ -2809,9 +3140,6 @@
         }
         document.getElementById('admin-ct-search').addEventListener('input', renderCtTable);
 
-        // ============================================================
-        //  ADMIN — TRAFFIC QUALITY
-        // ============================================================
         let tqListenerAttached = false;
         function initializeAdminTrafficQuality() {
             if (tqListenerAttached) return;
@@ -2858,14 +3186,14 @@
             });
         }
 
-        // ============================================================
-        //  ADMIN — MANAGERS
-        //  Creates Firebase Auth user via secondary app (won't sign admin out)
-        // ============================================================
-        async function loadManagersList() {
+        let managersListenerAttached = false;
+        function loadManagersList() {
             const tb = document.getElementById('admin-managers-table-body');
-            try {
-                const snap = await get(ref(db, 'managers'));
+            if (!tb) return;
+            if (managersListenerAttached) return;
+            managersListenerAttached = true;
+
+            onValue(ref(db, 'managers'), (snap) => {
                 if (!snap.exists()) {
                     tb.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding:15px;">No managers yet.</td></tr>';
                     return;
@@ -2880,9 +3208,9 @@
                     </tr>`;
                 });
                 tb.innerHTML = h;
-            } catch(e) {
-                tb.innerHTML = `<tr><td colspan="3" style="color:#f64e60; padding:15px;">Error: ${e.message}</td></tr>`;
-            }
+            }, (err) => {
+                tb.innerHTML = `<tr><td colspan="3" style="color:#f64e60; padding:15px;">Error: ${err.message}</td></tr>`;
+            });
         }
         document.getElementById('btn-manager-add').addEventListener('click', async () => {
             const email = document.getElementById('manager-add-email').value.trim();
@@ -2913,18 +3241,13 @@
             showToast('Manager account created.', 'success');
             document.getElementById('manager-add-email').value = '';
             document.getElementById('manager-add-password').value = '';
-            loadManagersList();
         });
         window.deleteManager = async function(key) {
             if (!confirm('Delete this manager?')) return;
             await remove(ref(db, `managers/${key}`));
             showToast('Manager deleted.', 'info');
-            loadManagersList();
         };
 
-        // ============================================================
-        //  ADMIN — CLICK ID SEARCH & APPROVE
-        // ============================================================
         document.getElementById('btn-admin-search-click-id').addEventListener('click', async () => {
             const cid = document.getElementById('admin-click-id-search').value.trim();
             const res = document.getElementById('admin-click-id-result');
@@ -2974,9 +3297,6 @@
             document.getElementById('btn-admin-search-click-id').click();
         };
 
-        // ============================================================
-        //  ADMIN — SETTINGS & MANUAL UPDATE
-        // ============================================================
         document.getElementById('btn-save-api-settings').addEventListener('click', () => {
             currentApiKey = document.getElementById('admin-api-key-input').value.trim();
             masterGlobalLink = document.getElementById('admin-master-link-input').value.trim();
