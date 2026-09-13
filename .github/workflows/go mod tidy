@@ -1,0 +1,8 @@
+module admadia-tracker
+
+go 1.22
+
+require (
+	firebase.google.com/go/v4 v4.14.0
+	google.golang.org/api v0.180.0
+)
