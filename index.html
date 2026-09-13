@@ -2248,7 +2248,7 @@
 
                 initializeRealtimeSync(key);
                 initAffiliateChat();
-                document.getElementById('user-referral-link').value = `https://app.admadia.site/ref?id=${loggedInUserFFId || key}`;
+                document.getElementById('user-referral-link').value = `https://293051adbulemadia.admadia.site/ref?id=${loggedInUserFFId || key}`;
                 document.getElementById('user-ff-id-display').value = loggedInUserFFId || '';
                 get(ref(db, `users/${key}/profile`)).then(snap => {
                     if (snap.exists()) {
