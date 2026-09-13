@@ -801,10 +801,14 @@
                                 <span>📡 My Click Tracking (Affiliate + Click ID)</span>
                                 <span style="font-size: 12px; color:#1bc5bd;">Live</span>
                             </div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                                 <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
                                     <span style="font-size: 11px; color: var(--text-muted);">Total Clicks (Affiliate ID)</span>
                                     <h3 id="aff-ct-total" style="color:#3699ff; margin-top: 4px;">0</h3>
+                                </div>
+                                <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <span style="font-size: 11px; color: var(--text-muted);">Link Copies</span>
+                                    <h3 id="aff-copy-total" style="color:#8950fc; margin-top: 4px;">0</h3>
                                 </div>
                                 <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
                                     <span style="font-size: 11px; color: var(--text-muted);">Last Click At</span>
@@ -1459,6 +1463,12 @@
             try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
         }
 
+        // ══════════════════════════════════════════════════════════════
+        //  CHANGED: Tracker domain — where server.js handles redirects
+        //  and records clicks. Replace with your real deployment host.
+        // ══════════════════════════════════════════════════════════════
+        const TRACKING_DOMAIN = "https://app.admadia.site";
+
         let currentApiKey = "https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1";
         let masterGlobalLink = "https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1";
         let cachedOffers = [];
@@ -1517,69 +1527,109 @@
             } catch(e) {}
         }
 
+        // ══════════════════════════════════════════════════════════════
+        //  CHANGED: ensureMainClickId now also publishes a reverse index
+        //  (clickId → affiliateKey) so server.js can resolve affiliates
+        //  without scanning the entire users tree.
+        // ══════════════════════════════════════════════════════════════
         async function ensureMainClickId(email) {
             if (!email) return null;
             const key = safeKey(email);
             const pRef = ref(db, `users/${key}/profile`);
             try {
                 const snap = await get(pRef);
+                let cid;
                 if (!snap.exists()) {
-                    const newId = 'CID-' + generateUniqueClickId();
+                    cid = 'CID-' + generateUniqueClickId();
                     await set(pRef, {
-                        email, mainClickId: newId, createdAt: Date.now(),
-                        status: 'Approved', rank: 'Standard Affiliate', name: email.split('@')[0]
+                        email, mainClickId: cid, createdAt: Date.now(),
+                        status: 'Approved', rank: 'Standard Affiliate',
+                        name: email.split('@')[0]
                     });
-                    return newId;
+                } else {
+                    const p = snap.val();
+                    if (p.mainClickId) {
+                        cid = p.mainClickId;
+                    } else {
+                        cid = 'CID-' + generateUniqueClickId();
+                        await update(pRef, { mainClickId: cid });
+                    }
                 }
-                const p = snap.val();
-                if (p.mainClickId) return p.mainClickId;
-                const newId = 'CID-' + generateUniqueClickId();
-                await update(pRef, { mainClickId: newId });
-                return newId;
+                // Publish / refresh the reverse index used by server.js
+                await update(ref(db, `clickIdIndex/${cid}`), {
+                    affiliateKey: key, email, updatedAt: Date.now()
+                });
+                return cid;
             } catch(e) {
                 console.warn('ensureMainClickId error:', e);
                 return 'CID-' + generateUniqueClickId();
             }
         }
 
-        async function recordClickForTracking(affiliateKey, clickId) {
+        // ══════════════════════════════════════════════════════════════
+        //  REPLACED: recordClickForTracking → recordCopyEvent
+        //  Copy telemetry is now stored in a separate copyTracking tree
+        //  and NEVER touches any click counter.
+        // ══════════════════════════════════════════════════════════════
+        async function recordCopyEvent(affiliateKey, clickId, offerId) {
             const now = Date.now();
+            const day = todayKey();
             try {
-                const summaryRef = ref(db, `clickTracking/${affiliateKey}/summary`);
+                // Aggregate per affiliate
+                const summaryRef = ref(db, `copyTracking/${affiliateKey}/summary`);
                 const sSnap = await get(summaryRef);
-                const sData = sSnap.exists() ? sSnap.val() : { totalClicks: 0 };
+                const s = sSnap.exists() ? sSnap.val() : { totalCopies: 0 };
                 await update(summaryRef, {
                     affiliateId: affiliateKey,
-                    totalClicks: (sData.totalClicks || 0) + 1,
-                    lastClickAt: now
+                    totalCopies: (s.totalCopies || 0) + 1,
+                    lastCopyAt: now
                 });
 
-                const clickIdRef = ref(db, `clickTracking/${affiliateKey}/clickIds/${clickId}`);
-                const cSnap = await get(clickIdRef);
-                const cData = cSnap.exists() ? cSnap.val() : { count: 0 };
-                await update(clickIdRef, {
+                // Per-day rollup (isolated from dailyCounters)
+                const dailyRef = ref(db, `copyTracking/${affiliateKey}/daily/${day}`);
+                const dSnap = await get(dailyRef);
+                const d = dSnap.exists() ? dSnap.val() : { count: 0 };
+                await update(dailyRef, { count: (d.count || 0) + 1, lastCopyAt: now });
+
+                // Per click-ID / offer
+                const cidRef = ref(db, `copyTracking/${affiliateKey}/clickIds/${clickId}`);
+                const cSnap = await get(cidRef);
+                const c = cSnap.exists() ? cSnap.val() : { count: 0 };
+                await update(cidRef, {
                     affiliateId: affiliateKey,
-                    clickId: clickId,
-                    count: (cData.count || 0) + 1,
-                    lastClickAt: now
+                    clickId,
+                    offerId: offerId || 'global',
+                    count: (c.count || 0) + 1,
+                    lastCopyAt: now
                 });
-            } catch(e) {
-                console.warn('recordClickForTracking error:', e);
+            } catch (e) {
+                console.warn('recordCopyEvent error:', e);
             }
         }
 
         // ══════════════════════════════════════════════════════════════
-        //  UPDATED: buildTrackingLink now appends sub6={clickId} and
-        //  aff_id={ffid} to match the postback macros {click_id} & {s2}.
+        //  CHANGED: buildTrackingLink now produces a link pointing at
+        //  YOUR tracker domain (/go/:clickId). server.js appends the
+        //  sub6 & aff_id parameters at redirect time.
         // ══════════════════════════════════════════════════════════════
         function buildTrackingLink(baseUrl, affiliateFfId, clickId) {
-            const marker = 'sub5=s1';
-            const idx = baseUrl.indexOf(marker);
-            let base = baseUrl;
-            if (idx !== -1) base = baseUrl.substring(0, idx + marker.length);
-            const cid = clickId || ('CID-' + generateUniqueClickId());
+            const cid  = clickId || ('CID-' + generateUniqueClickId());
             const ffid = affiliateFfId || 'FF-00000';
-            return { url: `${base}&sub6=${cid}&aff_id=${ffid}`, clickId: cid };
+
+            // Strip any previously appended tracking params so we never double-append.
+            let cleanBase = String(baseUrl)
+                .replace(/[?&]sub6=[^&]*/g, '')
+                .replace(/[?&]aff_id=[^&]*/g, '')
+                .replace(/\?&/, '?')
+                .replace(/&&/g, '&')
+                .replace(/[?&]$/, '');
+
+            const dest = encodeURIComponent(cleanBase);
+            return {
+                url: `${TRACKING_DOMAIN}/go/${encodeURIComponent(cid)}` +
+                     `?aff=${encodeURIComponent(ffid)}&dest=${dest}`,
+                clickId: cid
+            };
         }
 
         async function isNewIP(affiliateKey, ip) {
@@ -1600,80 +1650,41 @@
             } catch(e) { return true; }
         }
 
-        window.trackAndOpenLink = async function(linkUrl, offerId = null) {
+        // ══════════════════════════════════════════════════════════════
+        //  THE BUG FIX: copyTrackingLink replaces trackAndOpenLink.
+        //  Click metrics are NO LONGER touched on copy — only the
+        //  copyTracking tree is written. Clicks are recorded server-side
+        //  when a visitor opens the /go/:clickId URL.
+        // ══════════════════════════════════════════════════════════════
+        window.copyTrackingLink = async function(linkUrl, offerId = null) {
             if (!loggedInUserEmail) {
                 showToast('Please login as affiliate to track links.', 'error');
                 return;
             }
             const key = safeKey(loggedInUserEmail);
 
-            const mainClickId = await ensureMainClickId(loggedInUserEmail) || 'CID-' + generateUniqueClickId();
+            const mainClickId = await ensureMainClickId(loggedInUserEmail)
+                             || ('CID-' + generateUniqueClickId());
             loggedInUserMainClickId = mainClickId;
+
             const ctEl = document.getElementById('aff-main-click-id');
             if (ctEl) ctEl.innerText = mainClickId;
 
-            const baseUrl = linkUrl.split('&sub6=')[0];
-            const { url: finalUrl } = buildTrackingLink(baseUrl, loggedInUserFFId || 'FF-00000', mainClickId);
+            const { url: finalUrl } = buildTrackingLink(
+                linkUrl, loggedInUserFFId || 'FF-00000', mainClickId
+            );
 
             try { await navigator.clipboard.writeText(finalUrl); }
             catch(e) { console.warn('Clipboard failed', e); }
 
-            let clientIp = 'unknown';
-            try {
-                const r = await fetch('https://api.ipify.org?format=json');
-                const d = await r.json();
-                clientIp = d.ip;
-            } catch(e) {}
+            // Record only a copy — clicks are recorded by the redirect service.
+            await recordCopyEvent(key, mainClickId, offerId);
 
-            const allowClick = await isNewIP(key, clientIp);
-            const now = Date.now();
-            const day = todayKey();
-            const eventId = generateUniqueClickId();
-
-            try {
-                await set(ref(db, `trackings/${key}/${eventId}`), {
-                    timestamp: now,
-                    ip: clientIp,
-                    deviceFp: hashString(navigator.userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height),
-                    campaignId: offerId || 'global',
-                    conversion: false,
-                    earnings: 0,
-                    clickId: mainClickId,
-                    eventId: eventId,
-                    affiliate: key,
-                    affiliateFfId: loggedInUserFFId || 'FF-00000',
-                    isDuplicate: !allowClick,
-                    dateKey: day
-                });
-            } catch(e) { console.warn('trackings write failed', e); }
-
-            await recordClickForTracking(key, mainClickId);
-
-            const userStatsRef = ref(db, `users/${key}/stats`);
-            const statsSnap = await get(userStatsRef);
-            const stats = statsSnap.exists() ? statsSnap.val() : {};
-            const totalClicks = (stats.clicks || 0) + 1;
-            const dupe = (stats.duplicateClicks || 0) + (allowClick ? 0 : 1);
-            const unique = (stats.uniqueClicks || 0) + (allowClick ? 1 : 0);
-            await update(userStatsRef, {
-                clicks: totalClicks,
-                uniqueClicks: unique,
-                duplicateClicks: dupe
-            });
-
-            const dailyRef = ref(db, `dailyCounters/${key}/${day}`);
-            const dailySnap = await get(dailyRef);
-            const daily = dailySnap.exists() ? dailySnap.val() : { clicks: 0, leads: 0, earnings: 0 };
-            await set(dailyRef, {
-                clicks: (daily.clicks || 0) + 1,
-                leads: daily.leads || 0,
-                earnings: daily.earnings || 0
-            });
-
-            playClickSound();
-            if (allowClick) showToast('Link copied & click registered (new IP).', 'success');
-            else showToast('Link copied. Duplicate IP flagged.', 'info');
+            showToast('Tracking link copied. Clicks register when a visitor opens it.', 'success');
         };
+
+        // Backward-compatible alias so existing inline onclick handlers keep working.
+        window.trackAndOpenLink = window.copyTrackingLink;
 
         let realtimeSyncKey = null;
         function initializeRealtimeSync(key) {
@@ -1777,6 +1788,13 @@
                     totalEl.innerText = 0;
                     lastEl.innerText = '—';
                 }
+            });
+
+            // NEW: surface copy count so affiliates see feedback on the copy button
+            onValue(ref(db, `copyTracking/${key}/summary`), (snap) => {
+                const el = document.getElementById('aff-copy-total');
+                if (!el) return;
+                el.innerText = snap.exists() ? (snap.val().totalCopies || 0) : 0;
             });
         }
 
@@ -2008,6 +2026,7 @@
                     remove(ref(db, `users/${key}`)),
                     remove(ref(db, `trackings/${key}`)),
                     remove(ref(db, `clickTracking/${key}`)),
+                    remove(ref(db, `copyTracking/${key}`)),
                     remove(ref(db, `dailyCounters/${key}`)),
                     remove(ref(db, `campaigns/${key}`)),
                     remove(ref(db, `chat/${key}`)),
@@ -2129,6 +2148,10 @@
                 });
                 await set(ref(secondaryDb, `users/${key}/stats`), {
                     clicks: 0, uniqueClicks: 0, duplicateClicks: 0, leads: 0, earnings: 0, bonus: 0, payment: 0
+                });
+                // Publish reverse index so server.js can resolve this affiliate
+                await set(ref(secondaryDb, `clickIdIndex/${mainClickId}`), {
+                    affiliateKey: key, email, updatedAt: Date.now()
                 });
 
                 await set(ref(secondaryDb, `notifications/${key}/${Date.now()}`), {
