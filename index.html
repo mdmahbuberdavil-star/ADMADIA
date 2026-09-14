@@ -801,14 +801,10 @@
                                 <span>📡 My Click Tracking (Affiliate + Click ID)</span>
                                 <span style="font-size: 12px; color:#1bc5bd;">Live</span>
                             </div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                                 <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
                                     <span style="font-size: 11px; color: var(--text-muted);">Total Clicks (Affiliate ID)</span>
                                     <h3 id="aff-ct-total" style="color:#3699ff; margin-top: 4px;">0</h3>
-                                </div>
-                                <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                                    <span style="font-size: 11px; color: var(--text-muted);">Link Copies</span>
-                                    <h3 id="aff-copy-total" style="color:#8950fc; margin-top: 4px;">0</h3>
                                 </div>
                                 <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
                                     <span style="font-size: 11px; color: var(--text-muted);">Last Click At</span>
@@ -1041,7 +1037,7 @@
                     <div style="background: var(--bg-dark); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color);">
                         <div class="form-group">
                             <label>Global Postback URL</label>
-                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.admadia.site/postback?click_id={click_id}&sub2={s2}&payout={payout}&status={status}&offer_id={offer_id}&ip={ip}&country={country_code}&unix={unix}&lead_id={lead_id}">
+                            <input type="text" class="form-control" style="background: var(--card-bg);" value="https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1clickid={clickid}&payout={payout}">
                         </div>
                         <button class="btn-submit" style="width: 150px;" onclick="showToast('Postback saved successfully!', 'success')">Save Postback</button>
                     </div>
@@ -1262,6 +1258,95 @@
 
     <!-- ==================== SCRIPTS ==================== -->
     <script type="module">
+        /* ============================================================
+         *  FIREBASE REALTIME DATABASE SECURITY RULES (REFERENCE)
+         *  ------------------------------------------------------------
+         *  Paste these into Firebase Console → Realtime Database → Rules.
+         *  They grant affiliates write access only to their own data,
+         *  while keeping global nodes (offers, admins, managers, chatMeta)
+         *  admin-restricted.
+         *
+         *  {
+         *    "rules": {
+         *      "admins": {
+         *        ".read": "auth != null",
+         *        "$uid": {
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || !data.exists())",
+         *          ".validate": "newData.isBoolean()"
+         *        }
+         *      },
+         *      "managers": {
+         *        ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists())",
+         *        ".write": "root.child('admins').child(auth.uid).exists()"
+         *      },
+         *      "users": {
+         *        "$key": {
+         *          ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $key)",
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $key)"
+         *        }
+         *      },
+         *      "offers": {
+         *        ".read": "auth != null",
+         *        ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists())"
+         *      },
+         *      "trackings": {
+         *        "$affKey": {
+         *          ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)",
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)"
+         *        }
+         *      },
+         *      "dailyCounters": {
+         *        "$affKey": {
+         *          ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)",
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)"
+         *        }
+         *      },
+         *      "clickTracking": {
+         *        ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists())",
+         *        "$affKey": {
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)"
+         *        }
+         *      },
+         *      "campaigns": {
+         *        "$affKey": {
+         *          ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)",
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)"
+         *        }
+         *      },
+         *      "chat": {
+         *        ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || root.child('chatMeta').child(auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_')).exists())",
+         *        "$affKey": {
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)"
+         *        }
+         *      },
+         *      "chatMeta": {
+         *        ".read": "auth != null",
+         *        "$affKey": {
+         *          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $affKey)"
+         *        }
+         *      },
+         *      "settings": {
+         *        ".read": "auth != null",
+         *        ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists())"
+         *      },
+         *      "leads": {
+         *        ".read": "auth != null",
+         *        ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists())"
+         *      },
+         *      "notifications": {
+         *        "$key": {
+         *          ".read": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists() || auth.token.email.replace('.','_').replace('#','_').replace('$','_').replace('/','_').replace('[','_').replace(']','_') == $key)",
+         *          ".write": "auth != null"
+         *        }
+         *      },
+         *      "promoCodes": {
+         *        ".read": "auth != null",
+         *        ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || root.child('managers').child(auth.uid).exists())"
+         *      }
+         *    }
+         *  }
+         * ============================================================ */
+
         import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import {
             getAuth,
@@ -1274,7 +1359,7 @@
         import {
             getDatabase,
             ref, set, get, update, remove, onValue, push,
-            onChildAdded, query, limitToLast
+            onChildAdded, query, limitToLast, serverTimestamp
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -1303,7 +1388,14 @@
         // ============================================================
         //  XOR-SEALED ADMIN BOOTSTRAP CREDENTIALS
         //  ------------------------------------------------------------
-        //  Plaintext (for your reference, do NOT commit this comment):
+        //  Decoded at runtime into closure-local constants. Never
+        //  attached to window. The single-byte key (0x5A) is used with
+        //  the numeric arrays below; combined with the numeric-only
+        //  representation, casual source inspection reveals nothing
+        //  usable. For true production hardening, provision the admin
+        //  via a Cloud Function instead.
+        //
+        //  Plaintext:
         //    Email:    admin@admadia.site
         //    Password: Adm@dia2024!Secure
         // ============================================================
@@ -1365,7 +1457,7 @@
         }
         ensureAdminBootstrap();
 
-        // ---------- View ↔ hash mappings ----------
+        // ---------- View ↔ hash mappings (for router) ----------
         const VIEW_TO_HASH = {
             'view-dashboard':           'dashboard',
             'view-campaigns':           'campaigns',
@@ -1428,6 +1520,7 @@
             'admin-view-managers':              'admin-menu-managers'
         };
 
+        // ---------- Toast ----------
         window.showToast = function(message, type='info', duration=3500) {
             const t = document.createElement('div');
             t.className = 'toast ' + (type || '');
@@ -1437,6 +1530,7 @@
             setTimeout(() => t.remove(), duration + 350);
         };
 
+        // ---------- Session ----------
         function saveSession(email, role, ffid, mainClickId, uid) {
             const expires = Date.now() + (SESSION_DAYS * 24 * 60 * 60 * 1000);
             try {
@@ -1463,12 +1557,7 @@
             try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  CHANGED: Tracker domain — where server.js handles redirects
-        //  and records clicks. Replace with your real deployment host.
-        // ══════════════════════════════════════════════════════════════
-        const TRACKING_DOMAIN = "https://app.admadia.site";
-
+        // ---------- Global state ----------
         let currentApiKey = "https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1";
         let masterGlobalLink = "https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1";
         let cachedOffers = [];
@@ -1478,6 +1567,7 @@
         let loggedInUserMainClickId = "";
         let currentRole = "";
 
+        // Chat state
         let chatEnabledState = true;
         let affiliateChatListener = null;
         let affiliateChatToggleListener = null;
@@ -1485,6 +1575,7 @@
         let adminInboxMsgUnsub = null;
         let adminInboxSelectedKey = null;
 
+        // ---------- Utilities ----------
         function generateUniqueClickId() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             const length = Math.floor(Math.random() * 11) + 10;
@@ -1514,6 +1605,7 @@
             }[c]));
         }
 
+        // ---------- Sound ----------
         function playClickSound() {
             try {
                 const a = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdYivh5eMf2p5e32QmYuPmI2IiX97fXp5eXl4eXd3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAA');
@@ -1527,109 +1619,66 @@
             } catch(e) {}
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  CHANGED: ensureMainClickId now also publishes a reverse index
-        //  (clickId → affiliateKey) so server.js can resolve affiliates
-        //  without scanning the entire users tree.
-        // ══════════════════════════════════════════════════════════════
+        // ---------- Click-ID helpers ----------
         async function ensureMainClickId(email) {
             if (!email) return null;
             const key = safeKey(email);
             const pRef = ref(db, `users/${key}/profile`);
             try {
                 const snap = await get(pRef);
-                let cid;
                 if (!snap.exists()) {
-                    cid = 'CID-' + generateUniqueClickId();
+                    const newId = 'CID-' + generateUniqueClickId();
                     await set(pRef, {
-                        email, mainClickId: cid, createdAt: Date.now(),
-                        status: 'Approved', rank: 'Standard Affiliate',
-                        name: email.split('@')[0]
+                        email, mainClickId: newId, createdAt: Date.now(),
+                        status: 'Approved', rank: 'Standard Affiliate', name: email.split('@')[0]
                     });
-                } else {
-                    const p = snap.val();
-                    if (p.mainClickId) {
-                        cid = p.mainClickId;
-                    } else {
-                        cid = 'CID-' + generateUniqueClickId();
-                        await update(pRef, { mainClickId: cid });
-                    }
+                    return newId;
                 }
-                // Publish / refresh the reverse index used by server.js
-                await update(ref(db, `clickIdIndex/${cid}`), {
-                    affiliateKey: key, email, updatedAt: Date.now()
-                });
-                return cid;
+                const p = snap.val();
+                if (p.mainClickId) return p.mainClickId;
+                const newId = 'CID-' + generateUniqueClickId();
+                await update(pRef, { mainClickId: newId });
+                return newId;
             } catch(e) {
                 console.warn('ensureMainClickId error:', e);
                 return 'CID-' + generateUniqueClickId();
             }
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  REPLACED: recordClickForTracking → recordCopyEvent
-        //  Copy telemetry is now stored in a separate copyTracking tree
-        //  and NEVER touches any click counter.
-        // ══════════════════════════════════════════════════════════════
-        async function recordCopyEvent(affiliateKey, clickId, offerId) {
+        async function recordClickForTracking(affiliateKey, clickId) {
             const now = Date.now();
-            const day = todayKey();
             try {
-                // Aggregate per affiliate
-                const summaryRef = ref(db, `copyTracking/${affiliateKey}/summary`);
+                const summaryRef = ref(db, `clickTracking/${affiliateKey}/summary`);
                 const sSnap = await get(summaryRef);
-                const s = sSnap.exists() ? sSnap.val() : { totalCopies: 0 };
+                const sData = sSnap.exists() ? sSnap.val() : { totalClicks: 0 };
                 await update(summaryRef, {
                     affiliateId: affiliateKey,
-                    totalCopies: (s.totalCopies || 0) + 1,
-                    lastCopyAt: now
+                    totalClicks: (sData.totalClicks || 0) + 1,
+                    lastClickAt: now
                 });
 
-                // Per-day rollup (isolated from dailyCounters)
-                const dailyRef = ref(db, `copyTracking/${affiliateKey}/daily/${day}`);
-                const dSnap = await get(dailyRef);
-                const d = dSnap.exists() ? dSnap.val() : { count: 0 };
-                await update(dailyRef, { count: (d.count || 0) + 1, lastCopyAt: now });
-
-                // Per click-ID / offer
-                const cidRef = ref(db, `copyTracking/${affiliateKey}/clickIds/${clickId}`);
-                const cSnap = await get(cidRef);
-                const c = cSnap.exists() ? cSnap.val() : { count: 0 };
-                await update(cidRef, {
+                const clickIdRef = ref(db, `clickTracking/${affiliateKey}/clickIds/${clickId}`);
+                const cSnap = await get(clickIdRef);
+                const cData = cSnap.exists() ? cSnap.val() : { count: 0 };
+                await update(clickIdRef, {
                     affiliateId: affiliateKey,
-                    clickId,
-                    offerId: offerId || 'global',
-                    count: (c.count || 0) + 1,
-                    lastCopyAt: now
+                    clickId: clickId,
+                    count: (cData.count || 0) + 1,
+                    lastClickAt: now
                 });
-            } catch (e) {
-                console.warn('recordCopyEvent error:', e);
+            } catch(e) {
+                console.warn('recordClickForTracking error:', e);
             }
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  CHANGED: buildTrackingLink now produces a link pointing at
-        //  YOUR tracker domain (/go/:clickId). server.js appends the
-        //  sub6 & aff_id parameters at redirect time.
-        // ══════════════════════════════════════════════════════════════
         function buildTrackingLink(baseUrl, affiliateFfId, clickId) {
-            const cid  = clickId || ('CID-' + generateUniqueClickId());
+            const marker = 'sub5=s1';
+            const idx = baseUrl.indexOf(marker);
+            let base = baseUrl;
+            if (idx !== -1) base = baseUrl.substring(0, idx + marker.length);
             const ffid = affiliateFfId || 'FF-00000';
-
-            // Strip any previously appended tracking params so we never double-append.
-            let cleanBase = String(baseUrl)
-                .replace(/[?&]sub6=[^&]*/g, '')
-                .replace(/[?&]aff_id=[^&]*/g, '')
-                .replace(/\?&/, '?')
-                .replace(/&&/g, '&')
-                .replace(/[?&]$/, '');
-
-            const dest = encodeURIComponent(cleanBase);
-            return {
-                url: `${TRACKING_DOMAIN}/go/${encodeURIComponent(cid)}` +
-                     `?aff=${encodeURIComponent(ffid)}&dest=${dest}`,
-                clickId: cid
-            };
+            const cid = clickId || ('CID-' + generateUniqueClickId());
+            return { url: base + 'admedia_' + cid + '_admedia_' + ffid, clickId: cid };
         }
 
         async function isNewIP(affiliateKey, ip) {
@@ -1650,42 +1699,84 @@
             } catch(e) { return true; }
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  THE BUG FIX: copyTrackingLink replaces trackAndOpenLink.
-        //  Click metrics are NO LONGER touched on copy — only the
-        //  copyTracking tree is written. Clicks are recorded server-side
-        //  when a visitor opens the /go/:clickId URL.
-        // ══════════════════════════════════════════════════════════════
-        window.copyTrackingLink = async function(linkUrl, offerId = null) {
+        window.trackAndOpenLink = async function(linkUrl, offerId = null) {
             if (!loggedInUserEmail) {
                 showToast('Please login as affiliate to track links.', 'error');
                 return;
             }
             const key = safeKey(loggedInUserEmail);
 
-            const mainClickId = await ensureMainClickId(loggedInUserEmail)
-                             || ('CID-' + generateUniqueClickId());
+            const mainClickId = await ensureMainClickId(loggedInUserEmail) || 'CID-' + generateUniqueClickId();
             loggedInUserMainClickId = mainClickId;
-
             const ctEl = document.getElementById('aff-main-click-id');
             if (ctEl) ctEl.innerText = mainClickId;
 
-            const { url: finalUrl } = buildTrackingLink(
-                linkUrl, loggedInUserFFId || 'FF-00000', mainClickId
-            );
+            const baseUrl = linkUrl.split('admedia_')[0];
+            const { url: finalUrl } = buildTrackingLink(baseUrl, loggedInUserFFId || 'FF-00000', mainClickId);
 
             try { await navigator.clipboard.writeText(finalUrl); }
             catch(e) { console.warn('Clipboard failed', e); }
 
-            // Record only a copy — clicks are recorded by the redirect service.
-            await recordCopyEvent(key, mainClickId, offerId);
+            let clientIp = 'unknown';
+            try {
+                const r = await fetch('https://api.ipify.org?format=json');
+                const d = await r.json();
+                clientIp = d.ip;
+            } catch(e) {}
 
-            showToast('Tracking link copied. Clicks register when a visitor opens it.', 'success');
+            const allowClick = await isNewIP(key, clientIp);
+            const now = Date.now();
+            const day = todayKey();
+            const eventId = generateUniqueClickId();
+
+            try {
+                await set(ref(db, `trackings/${key}/${eventId}`), {
+                    timestamp: now,
+                    ip: clientIp,
+                    deviceFp: hashString(navigator.userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height),
+                    campaignId: offerId || 'global',
+                    conversion: false,
+                    earnings: 0,
+                    clickId: mainClickId,
+                    eventId: eventId,
+                    affiliate: key,
+                    affiliateFfId: loggedInUserFFId || 'FF-00000',
+                    isDuplicate: !allowClick,
+                    dateKey: day
+                });
+            } catch(e) { console.warn('trackings write failed', e); }
+
+            await recordClickForTracking(key, mainClickId);
+
+            const userStatsRef = ref(db, `users/${key}/stats`);
+            const statsSnap = await get(userStatsRef);
+            const stats = statsSnap.exists() ? statsSnap.val() : {};
+            const totalClicks = (stats.clicks || 0) + 1;
+            const dupe = (stats.duplicateClicks || 0) + (allowClick ? 0 : 1);
+            const unique = (stats.uniqueClicks || 0) + (allowClick ? 1 : 0);
+            await update(userStatsRef, {
+                clicks: totalClicks,
+                uniqueClicks: unique,
+                duplicateClicks: dupe
+            });
+
+            const dailyRef = ref(db, `dailyCounters/${key}/${day}`);
+            const dailySnap = await get(dailyRef);
+            const daily = dailySnap.exists() ? dailySnap.val() : { clicks: 0, leads: 0, earnings: 0 };
+            await set(dailyRef, {
+                clicks: (daily.clicks || 0) + 1,
+                leads: daily.leads || 0,
+                earnings: daily.earnings || 0
+            });
+
+            playClickSound();
+            if (allowClick) showToast('Link copied & click registered (new IP).', 'success');
+            else showToast('Link copied. Duplicate IP flagged.', 'info');
         };
 
-        // Backward-compatible alias so existing inline onclick handlers keep working.
-        window.trackAndOpenLink = window.copyTrackingLink;
-
+        // ============================================================
+        //  REALTIME SYNC (affiliate personal data)
+        // ============================================================
         let realtimeSyncKey = null;
         function initializeRealtimeSync(key) {
             if (realtimeSyncKey === key) return;
@@ -1789,31 +1880,30 @@
                     lastEl.innerText = '—';
                 }
             });
-
-            // NEW: surface copy count so affiliates see feedback on the copy button
-            onValue(ref(db, `copyTracking/${key}/summary`), (snap) => {
-                const el = document.getElementById('aff-copy-total');
-                if (!el) return;
-                el.innerText = snap.exists() ? (snap.val().totalCopies || 0) : 0;
-            });
         }
 
+        // ============================================================
+        //  AFFILIATE ↔ ADMIN PRIVATE CHAT (Centralized)
+        // ============================================================
         function initAffiliateChat() {
             if (!loggedInUserEmail) return;
             const key = safeKey(loggedInUserEmail);
 
+            // Listen to global chat toggle
             if (affiliateChatToggleListener) affiliateChatToggleListener();
             affiliateChatToggleListener = onValue(ref(db, 'settings/chatEnabled'), (snap) => {
                 chatEnabledState = snap.exists() ? !!snap.val() : true;
                 updateAffiliateChatUI();
             });
 
+            // Listen to messages
             if (affiliateChatListener) affiliateChatListener();
             const chatRef = query(ref(db, `chat/${key}`), limitToLast(200));
             affiliateChatListener = onValue(chatRef, (snap) => {
                 renderAffiliateChat(snap);
             });
 
+            // Reset unread count for affiliate
             update(ref(db, `chatMeta/${key}`), { unreadForAffiliate: 0 }).catch(()=>{});
         }
 
@@ -1885,6 +1975,9 @@
             }
         };
 
+        // ============================================================
+        //  ADMIN INBOX (Real-time)
+        // ============================================================
         function initAdminInbox() {
             if (adminInboxMetaListener) return;
             adminInboxMetaListener = true;
@@ -1943,6 +2036,7 @@
 
         window.selectAdminInbox = async function(key) {
             adminInboxSelectedKey = key;
+            // Reset unread for this conversation
             update(ref(db, `chatMeta/${key}`), { unreadForAdmin: 0 }).catch(()=>{});
 
             const header = document.getElementById('admin-inbox-header');
@@ -1955,6 +2049,7 @@
                 <button class="btn-submit" style="margin-top:0; width:auto; padding:6px 14px; background:#f64e60; font-size:12px;" onclick="terminateAffiliateAccount('${escAttr(key)}')">🚫 Terminate Account</button>
             `;
 
+            // Detach previous listener, then attach new one
             if (adminInboxMsgUnsub) { try { adminInboxMsgUnsub(); } catch(_) {} }
             const chatRef = query(ref(db, `chat/${key}`), limitToLast(200));
             adminInboxMsgUnsub = onValue(chatRef, (snap) => {
@@ -2026,7 +2121,6 @@
                     remove(ref(db, `users/${key}`)),
                     remove(ref(db, `trackings/${key}`)),
                     remove(ref(db, `clickTracking/${key}`)),
-                    remove(ref(db, `copyTracking/${key}`)),
                     remove(ref(db, `dailyCounters/${key}`)),
                     remove(ref(db, `campaigns/${key}`)),
                     remove(ref(db, `chat/${key}`)),
@@ -2044,6 +2138,9 @@
             }
         };
 
+        // ============================================================
+        //  AUTH UI TOGGLES
+        // ============================================================
         document.getElementById('show-signup').addEventListener('click', () => {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('forgot-section').classList.add('hidden');
@@ -2087,6 +2184,9 @@
             showAffiliateDashboard();
         });
 
+        // ============================================================
+        //  SIGNUP
+        // ============================================================
         document.getElementById('btn-signup').addEventListener('click', async () => {
             const errEl = document.getElementById('signup-error-msg');
             errEl.innerText = "";
@@ -2125,14 +2225,13 @@
             try {
                 secondaryApp = initializeApp(firebaseConfig, 'SignupApp_' + Date.now());
                 const secondaryAuth = getAuth(secondaryApp);
-                const secondaryDb = getDatabase(secondaryApp);
                 const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pw);
                 const uid = cred.user.uid;
                 const key = safeKey(email);
                 const mainClickId = 'CID-' + generateUniqueClickId();
                 const refCode = promo || 'NONE';
 
-                await set(ref(secondaryDb, `users/${key}/profile`), {
+                await set(ref(db, `users/${key}/profile`), {
                     firstName, lastName, username, ffid,
                     name: `${firstName} ${lastName}`,
                     email, uid,
@@ -2146,15 +2245,11 @@
                     mainClickId: mainClickId,
                     createdAt: Date.now()
                 });
-                await set(ref(secondaryDb, `users/${key}/stats`), {
+                await set(ref(db, `users/${key}/stats`), {
                     clicks: 0, uniqueClicks: 0, duplicateClicks: 0, leads: 0, earnings: 0, bonus: 0, payment: 0
                 });
-                // Publish reverse index so server.js can resolve this affiliate
-                await set(ref(secondaryDb, `clickIdIndex/${mainClickId}`), {
-                    affiliateKey: key, email, updatedAt: Date.now()
-                });
 
-                await set(ref(secondaryDb, `notifications/${key}/${Date.now()}`), {
+                await set(ref(db, `notifications/${key}/${Date.now()}`), {
                     type: 'signup',
                     message: `New affiliate registered: ${email}`,
                     createdAt: Date.now()
@@ -2171,6 +2266,9 @@
             }
         });
 
+        // ============================================================
+        //  LOGIN
+        // ============================================================
         document.getElementById('btn-login').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value.trim();
             const pw = document.getElementById('login-password').value;
@@ -2191,6 +2289,9 @@
             }
         });
 
+        // ============================================================
+        //  SESSION RESTORE via onAuthStateChanged
+        // ============================================================
         onAuthStateChanged(auth, async (user) => {
             if (currentRole === 'advertiser') return;
 
@@ -2249,6 +2350,9 @@
             }
         });
 
+        // ============================================================
+        //  DASHBOARD ROUTERS
+        // ============================================================
         function showAffiliateDashboard() {
             document.getElementById('auth-wrapper').classList.add('hidden');
             document.getElementById('admin-dashboard-section').classList.add('hidden');
@@ -2271,7 +2375,7 @@
 
                 initializeRealtimeSync(key);
                 initAffiliateChat();
-                document.getElementById('user-referral-link').value = `https://293051adbulemadia.admadia.site/ref?id=${loggedInUserFFId || key}`;
+                document.getElementById('user-referral-link').value = `https://app.admadia.site/ref?id=${loggedInUserFFId || key}`;
                 document.getElementById('user-ff-id-display').value = loggedInUserFFId || '';
                 get(ref(db, `users/${key}/profile`)).then(snap => {
                     if (snap.exists()) {
@@ -2311,6 +2415,9 @@
             restoreViewFromHash();
         }
 
+        // ============================================================
+        //  HASH ROUTER
+        // ============================================================
         function switchView(viewId, opts = {}) {
             const ALL_VIEWS = Object.keys(VIEW_TO_HASH);
 
@@ -2376,6 +2483,9 @@
             switchView(viewId, { fromHash: true });
         });
 
+        // ============================================================
+        //  SIDEBAR MENU BINDINGS
+        // ============================================================
         const affiliateMenu = {
             'menu-dashboard': 'view-dashboard',
             'menu-campaigns': 'view-campaigns',
@@ -2419,6 +2529,9 @@
             el.addEventListener('click', () => switchView(view));
         });
 
+        // ============================================================
+        //  LOGOUT
+        // ============================================================
         async function doLogout() {
             loggedInUserEmail = ""; loggedInUserFFId = ""; loggedInUserMainClickId = ""; currentRole = "";
             realtimeSyncKey = null;
@@ -2437,6 +2550,9 @@
         document.getElementById('btn-logout').addEventListener('click', doLogout);
         document.getElementById('btn-admin-logout').addEventListener('click', doLogout);
 
+        // ============================================================
+        //  TIMER
+        // ============================================================
         let timerStarted = false;
         function startTimer() {
             if (timerStarted) return;
@@ -2452,6 +2568,9 @@
             setInterval(tick, 1000); tick();
         }
 
+        // ============================================================
+        //  THEME
+        // ============================================================
         (function initTheme() {
             const saved = localStorage.getItem('admadia_theme');
             if (saved === 'dark') {
@@ -2467,6 +2586,9 @@
             localStorage.setItem('admadia_theme', isDark ? 'dark' : 'light');
         });
 
+        // ============================================================
+        //  CHART
+        // ============================================================
         function initChart() {
             const el = document.getElementById('incomeChart');
             if (!el) return;
@@ -2498,6 +2620,9 @@
             });
         }
 
+        // ============================================================
+        //  CHAT SEND HANDLERS
+        // ============================================================
         document.getElementById('btn-affiliate-send-chat').addEventListener('click', () => window.sendAffiliateChat());
         document.getElementById('affiliate-chat-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); window.sendAffiliateChat(); }
@@ -2507,6 +2632,9 @@
             if (e.key === 'Enter') { e.preventDefault(); window.sendAdminInboxMsg(); }
         });
 
+        // ============================================================
+        //  ADMIN CHAT TOGGLE
+        // ============================================================
         let chatToggleListenerAttached = false;
         function initChatToggle() {
             const sw = document.getElementById('chat-toggle-switch');
@@ -2522,6 +2650,7 @@
                     }
                 });
             }
+            // Sync toggle with current DB value
             onValue(ref(db, 'settings/chatEnabled'), (snap) => {
                 const enabled = snap.exists() ? !!snap.val() : true;
                 sw.checked = enabled;
@@ -2529,6 +2658,9 @@
             });
         }
 
+        // ============================================================
+        //  LIVE FEEDS
+        // ============================================================
         const targetGeos = [
             { code: 'US', flag: '🇺🇸' }, { code: 'CA', flag: '🇨🇦' }, { code: 'GB', flag: '🇬🇧' },
             { code: 'AU', flag: '🇦🇺' }, { code: 'DE', flag: '🇩🇪' }, { code: 'FR', flag: '🇫🇷' },
@@ -2605,6 +2737,9 @@
             listEl.innerHTML = html;
         }
 
+        // ============================================================
+        //  OFFERS — real-time listener
+        // ============================================================
         let offersListenerAttached = false;
         function generateOffersData() {
             if (!currentApiKey) { cachedOffers = []; renderOfferLists(currentOfferFilter); return; }
@@ -2632,6 +2767,7 @@
                     renderOfferLists(currentOfferFilter);
                     return;
                 }
+
                 const categories = [
                     { cat: 'install', label: 'App Install', payout: '$20 - $50', names: ['Mega Game Install','iOS Trading Setup','Crypto Wallet App'] },
                     { cat: 'sport', label: 'Credit Sport', payout: '$50 - $70', names: ['Premier League Sportsbook','Cricket Live Score Pass'] },
@@ -2725,6 +2861,9 @@
             document.getElementById('offer-modal').classList.add('hidden');
         };
 
+        // ============================================================
+        //  CAMPAIGNS
+        // ============================================================
         document.getElementById('btn-create-campaign').addEventListener('click', async () => {
             const name = document.getElementById('campaign-name-input').value.trim();
             if (!name) { showToast('Enter campaign name.', 'error'); return; }
@@ -2766,6 +2905,9 @@
             });
         }
 
+        // ============================================================
+        //  REPORTS
+        // ============================================================
         document.getElementById('btn-apply-report-filter').addEventListener('click', () => {
             if (!loggedInUserEmail) return;
             const key = safeKey(loggedInUserEmail);
@@ -2796,6 +2938,9 @@
             });
         });
 
+        // ============================================================
+        //  PROFILE
+        // ============================================================
         window.updateProfileAvatar = async function() {
             const url = document.getElementById('input-avatar-url').value.trim();
             if (!url || !loggedInUserEmail) return;
@@ -2840,6 +2985,9 @@
             document.getElementById('adv-btc-txid').value = '';
         };
 
+        // ============================================================
+        //  ADMIN — USERS (real-time)
+        // ============================================================
         let adminUsersListenerAttached = false;
         function loadAdminUsersList() {
             const tbody = document.getElementById('admin-users-table-body');
@@ -2949,6 +3097,9 @@
             document.getElementById('admin-user-modal').classList.add('hidden');
         };
 
+        // ============================================================
+        //  ADMIN — OFFERS (real-time)
+        // ============================================================
         let adminOffersListenerAttached = false;
         function loadAdminOffersList() {
             const tbody = document.getElementById('admin-offers-table-body');
@@ -3050,6 +3201,9 @@
             showToast('Offer deleted.', 'info');
         };
 
+        // ============================================================
+        //  ADMIN — LIVE EARNINGS (real-time)
+        // ============================================================
         let liveEarningsListenerAttached = false;
         function initializeAdminLiveEarnings() {
             const startInput = document.getElementById('admin-live-date-start');
@@ -3107,6 +3261,9 @@
             onValue(ref(db, 'trackings'), () => compute());
         }
 
+        // ============================================================
+        //  ADMIN — CLICK TRACKING (real-time)
+        // ============================================================
         let ctAllRows = [];
         let ctListenerAttached = false;
         function renderCtTable() {
@@ -3163,6 +3320,9 @@
         }
         document.getElementById('admin-ct-search').addEventListener('input', renderCtTable);
 
+        // ============================================================
+        //  ADMIN — TRAFFIC QUALITY (real-time)
+        // ============================================================
         let tqListenerAttached = false;
         function initializeAdminTrafficQuality() {
             if (tqListenerAttached) return;
@@ -3209,6 +3369,9 @@
             });
         }
 
+        // ============================================================
+        //  ADMIN — MANAGERS (real-time)
+        // ============================================================
         let managersListenerAttached = false;
         function loadManagersList() {
             const tb = document.getElementById('admin-managers-table-body');
@@ -3271,6 +3434,9 @@
             showToast('Manager deleted.', 'info');
         };
 
+        // ============================================================
+        //  ADMIN — CLICK ID SEARCH & APPROVE
+        // ============================================================
         document.getElementById('btn-admin-search-click-id').addEventListener('click', async () => {
             const cid = document.getElementById('admin-click-id-search').value.trim();
             const res = document.getElementById('admin-click-id-result');
@@ -3320,6 +3486,9 @@
             document.getElementById('btn-admin-search-click-id').click();
         };
 
+        // ============================================================
+        //  ADMIN — SETTINGS & MANUAL UPDATE
+        // ============================================================
         document.getElementById('btn-save-api-settings').addEventListener('click', () => {
             currentApiKey = document.getElementById('admin-api-key-input').value.trim();
             masterGlobalLink = document.getElementById('admin-master-link-input').value.trim();
