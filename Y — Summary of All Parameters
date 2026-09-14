@@ -1,0 +1,91 @@
+# Y — Summary of All Parameters (Updated)
+
+**File:** Y_Summary_All_Parameters_Updated.md  
+**Date:** 2026-09-15  
+**Source URL:**  
+https://app.trcefy.com/click?pid=2&offer_id=23972&sub2=u814724&sub5=s1admedia_CID-9ISxRfQESK_admedia_FF-00000
+
+---
+
+## 1. Core URL Information
+
+| Item | Value |
+|---|---|
+| Protocol | HTTPS |
+| Domain | app.trcefy.com |
+| Path | /click |
+| Network | Trafee |
+| Purpose | CPA click-tracking / redirect endpoint |
+| Final offer ID | 23972 |
+| Publisher / Affiliate ID | 2 |
+| Traffic Source | AdMedia (identified via sub5) |
+| Click ID | CID-9ISxRfQESK |
+| Total Query Parameters | 4 |
+
+---
+
+## 2. Full Parameter Table
+
+| Parameter | Value | Type | Meaning / Purpose | Notes |
+|---|---|---|---|---|
+| `pid` | `2` | Publisher ID | Identifies the affiliate/publisher account in Trafee | Low numeric ID; likely early or admin-level account |
+| `offer_id` | `23972` | Offer ID | Specifies the CPA offer being promoted | Offer vertical not publicly indexed; likely Adult Dating, Sweepstakes, iGaming, or Cams |
+| `sub2` | `u814724` | Custom SubID | First-layer tracking identifier from the traffic source | Used for internal tracking, user/session, placement, or campaign ID |
+| `sub5` | `s1admedia_CID-9ISxRfQESK_admedia_FF-00000` | Custom SubID / Nested tracking string | Second-layer tracking string carrying AdMedia source data | Contains source, Click ID, repeated source name, and campaign/feed code |
+
+---
+
+## 3. sub5 Breakdown
+
+**Value:**  
+`s1admedia_CID-9ISxRfQESK_admedia_FF-00000`
+
+| Segment | Value | Meaning |
+|---|---|---|
+| `s1admedia` | Source 1: AdMedia | Identifies the traffic source as AdMedia |
+| `CID-9ISxRfQESK` | Click ID | Unique click identifier from AdMedia’s tracking system |
+| `admedia` | AdMedia | Reinforces the traffic source name |
+| `FF-00000` | Campaign / Feed code | Likely identifies a specific campaign, feed, or placement |
+
+---
+
+## 4. Tracking Chain Summary
+
+1. **AdMedia** generates the click and assigns `CID-9ISxRfQESK`.
+2. Click is redirected to **Trafee** at `app.trcefy.com/click`.
+3. Trafee records:
+   - `pid=2`
+   - `offer_id=23972`
+   - `sub2=u814724`
+   - `sub5=s1admedia_CID-9ISxRfQESK_admedia_FF-00000`
+4. Trafee routes the user to the final offer page for `offer_id=23972`.
+5. If a conversion occurs, Trafee attributes it to `pid=2`.
+6. Trafee can send a postback to AdMedia using the `CID-9ISxRfQESK` value.
+7. AdMedia credits the correct source/campaign based on the returned Click ID.
+
+---
+
+## 5. Key Takeaways
+
+- This is a **standard multi-layer CPA tracking URL**.
+- **Trafee** is the CPA network handling click tracking and conversion attribution.
+- **AdMedia** is the traffic source, identified inside the `sub5` parameter.
+- The **Click ID** `CID-9ISxRfQESK` is the critical value for postback matching.
+- The **offer** being promoted is `23972`.
+- The **affiliate/publisher** is `pid=2`.
+- The **sub2** value `u814724` provides an additional layer of internal tracking.
+
+---
+
+## 6. Possible Issues If Link Fails
+
+| Issue | Likely Cause |
+|---|---|
+| 404 / blank page | Offer expired, paused, or removed |
+| No conversion attribution | Cookie blocked, postback misconfigured, or SubID lost |
+| Source not credited | AdMedia postback URL not firing or CID mismatch |
+| Click blocked | Trafee fraud filter or untrusted source restriction |
+
+---
+
+**End of updated Y — Summary of All Parameters.**
