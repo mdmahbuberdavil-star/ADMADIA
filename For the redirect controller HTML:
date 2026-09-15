@@ -1,0 +1,34 @@
+<div id="admin-view-redirect" class="box-container hidden">
+    <div class="box-header"><span>🔀 Redirect Controller — Global Link Routing</span></div>
+    <div class="redirect-grid">
+        <div class="redirect-card">
+            <div class="redirect-toggle-row">
+                <div>
+                    <div class="redirect-title">Redirect Engine</div>
+                    <div class="redirect-sub">When ON, all affiliate tracking links are redirected to the Target URL below.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="redirect-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="redirect-status" id="redirect-status-pill">● OFF — Links resolve to network offers</div>
+        </div>
+        <div class="redirect-card">
+            <div class="form-group">
+                <label>Target URL</label>
+                <input type="text" id="redirect-target-url" class="form-control" placeholder="https://example.com/target-offer" style="background: var(--card-bg);">
+            </div>
+            <button class="btn-submit" id="btn-save-redirect" style="width:200px; background:#1bc5bd;">Save Redirect Settings</button>
+        </div>
+    </div>
+    <div class="preview-box">
+        <div class="preview-title">Example URL / Live Preview</div>
+        <p>...</p>
+        <code id="redirect-preview-url">https://example.com/target-offer?clickid=CID-XXXX&aff=FF-00000&sub5=...</code>
+        <div style="display:flex; gap:10px; margin-top:12px;">
+            <button class="btn-submit" style="width:auto; padding:8px 16px; margin:0; background:#3699ff;" onclick="testRedirectPreview()">Test Open</button>
+            <button class="btn-submit" style="width:auto; padding:8px 16px; margin:0; background:#8950fc;" onclick="copyRedirectPreview()">Copy Preview</button>
+        </div>
+    </div>
+</div>
