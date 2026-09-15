@@ -1,0 +1,24 @@
+<div id="admin-view-postbacks" class="box-container hidden">
+    <div class="box-header"><span>📮 Postback Management — Global & Custom URLs</span></div>
+    <div class="redirect-grid">
+        <div class="redirect-card">
+            <h4>Global Postback URL</h4>
+            <input id="global-postback-input" ...>
+            <button id="btn-save-global-postback">Save Global Postback</button>
+            <div class="postback-tokens">Available tokens: {clickid} {aff_id} {payout} {offer_id} {status}</div>
+        </div>
+        <div class="redirect-card">
+            <h4>Custom Postback (Per Affiliate)</h4>
+            <input id="custom-postback-email">
+            <input id="custom-postback-url">
+            <button id="btn-save-custom-postback">Save Custom Postback</button>
+        </div>
+    </div>
+    <div class="box-header" style="margin-top:25px;"><span>Custom Postback Registry</span></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Affiliate</th><th>Custom Postback URL</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead>
+            <tbody id="admin-postbacks-table-body">...</tbody>
+        </table>
+    </div>
+</div>
