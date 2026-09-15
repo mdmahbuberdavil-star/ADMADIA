@@ -1,0 +1,2 @@
+const baseUrl = linkUrl.split('admedia_')[0];
+const { url: finalUrl } = buildTrackingLink(baseUrl, loggedInUserFFId || 'FF-00000', mainClickId);
